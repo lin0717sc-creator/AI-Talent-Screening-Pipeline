@@ -1,17 +1,16 @@
 import pandas as pd
 
-def extract_skills_tags(text_cell, pattern):
-    """
-    👑 纯净化算子：正则标签标准提白
-    输入一行脏文本，吐出干净的标签，绝对不带有任何副作用。
-    """
-    if pd.isna(text_cell) or not isinstance(text_cell, str):
-        return 'NO_SKILLS_TAG'
+def extract_regex_feature(text, pattern, default="N/A"):
+    """使用正则从字符串提取单项特征"""
+    if not isinstance(text, str):
+        return default
+    match = pattern.search(text)
+    return match.group(0) if match else default
+
+def extract_all_skills(text, pattern):
+    """提取所有匹配到的技能点并返回列表"""
+    if not isinstance(text, str):
+        return []
+    # 使用 set 去重，并转为排序列表
+    return sorted(list(set(pattern.findall(text))))
     
-    matches = pattern.findall(text_cell)
-    if matches:
-        # 去重、修剪空格、首字母大写、重新排序，呈现大厂绝对正规的清洗美感
-        tags = set([m.strip().title() for m in matches])
-        return ", ".join(sorted(list(tags)))
-    
-    return 'NON_STANDARD_SKILLS'
