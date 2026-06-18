@@ -63,6 +63,12 @@ Traditional deduplication filters via simple `keep='first'` scripts, leading to 
 
 Enforces a dynamic double-upward anchor (`BASE_DIR`) in the configuration module. This system-level defense ensures that no matter where the code is executed (local terminal, distributed remote server, or cron-job orchestration), the workspace alignment coordinates remain invariant, completely eliminating `FileNotFoundError` caused by relative directory shifting.
 
+### 🤖 Core 5: Intelligent Feature Extraction Engine (V1.0 Update)
+Integrated a decoupled **Regex-based automated feature extraction engine** into the pipeline. 
+- **Dynamic Feature Stripping**: Automatically parses unstructured resume data into structured fields (e.g., Email, Standardized Skills Tags).
+- **Non-Greedy Extraction**: Employs non-greedy regex logic (`.*?`) to prevent data noise contamination, ensuring high-fidelity output.
+- **Config-Driven**: Extraction patterns are fully managed in `config/settings.py`, allowing HR teams to pivot screening criteria instantly without triggering a production downtime.
+
 ---
 
 ## 🚀 4. Automated Ignition Sequence (系统一键总启航)
