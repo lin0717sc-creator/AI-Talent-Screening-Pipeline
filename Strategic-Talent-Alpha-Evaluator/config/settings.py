@@ -21,3 +21,30 @@ FILL_RULES = {
     'phone': 'UNKNOWN_PHONE',
     'standard_skills': 'NO_SKILLS_TAG'
 }
+
+# 🛡️ 语义映射宪法：将多种变体归一化为标准标签
+SKILL_MAPPING = {
+    'python': 'Python',
+    'py': 'Python',
+    'sql': 'SQL',
+    'tableau': 'Tableau',
+    'machine learning': 'ML',
+    'ml': 'ML'
+}
+# 提取技能的正则需保持，但结果要进入归一化流水线
+
+# 商业加权矩阵
+SKILL_WEIGHTS = {
+    'Python': 0.4,
+    'SQL': 0.3,
+    'Tableau': 0.1,
+    'ML': 0.2
+}
+
+# 必须具备的技能（一票否决权）
+MUST_HAVE_SKILLS = ['Python']
+
+# 增补：组合加成权重 (如果同时具备 Python 和 ML，触发 synergy_bonus)
+SYNERGY_BONUS = {
+    'Python_ML': 0.20,  # 额外奖励 20%
+}
