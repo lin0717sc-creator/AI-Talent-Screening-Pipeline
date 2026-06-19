@@ -45,7 +45,15 @@ Strategic-Talent-Alpha-Evaluator/
 
 ---
 
-## ⚔️ 3. Core Engineering Breakthroughs (四大硬核工程平移)
+## 🛠️ 3. Technical Stack (技术栈选型)
+- **Runtime**: Python 3.11+
+- **Data Governance**: Pandas (ETL Pipeline)
+- **Intelligent Engine**: Regex-based Pattern Matching & Custom Scoring Logic
+- **Architecture**: Object-Oriented Design (Decoupled Operator-Controller Pattern)
+
+---
+
+## ⚔️ 4. Core Engineering Breakthroughs (四大硬核工程平移)
 
 ### 🛡️ Core 1: Decoupled Compute & Storage Architecture (计算与配置彻底分离)
 
@@ -69,9 +77,19 @@ Integrated a decoupled **Regex-based automated feature extraction engine** into 
 - **Non-Greedy Extraction**: Employs non-greedy regex logic (`.*?`) to prevent data noise contamination, ensuring high-fidelity output.
 - **Config-Driven**: Extraction patterns are fully managed in `config/settings.py`, allowing HR teams to pivot screening criteria instantly without triggering a production downtime.
 
+### 🤖 Core 6: Engineering Breakthroughs
+1. **Intelligent Feature Extraction**: Decoupled Regex engine for automated parsing of unstructured resume data.
+2. **Data Normalization Engine**: Built-in semantic mapping dictionary to standardize fragmented skill tags (e.g., "py" -> "Python").
+3. **Robust Circuit Breaker (熔断机制)**: Implemented decorator-based validation to intercept malformed data at the pipeline entrance.
+4. **Weighted Scoring Engine (V1.0 Update)**: 
+   - **Capability Scoring**: Multi-dimensional weighted analysis engine (Python: 0.4, SQL: 0.3, etc.).
+   - **Hard-Constraint Enforcement**: Strictly enforces "Must-Have" skill prerequisites; non-compliant candidates are automatically filtered.
+   - **Synergy Bonus (协同加成)**: Non-linear scoring logic that rewards high-value skill clusters (e.g., Python + ML Bonus).
+   - **Business Protection (异常处理)**: Implemented 30-point baseline protection for zero-skill entries, ensuring production stability.
+
 ---
 
-## 🚀 4. Automated Ignition Sequence (系统一键总启航)
+## 🚀 5. Automated Ignition Sequence (系统一键总启航)
 
 ```bash
 # Step 1: Ingestion Zone Placement (原始脏数据物理并网入库)
@@ -87,7 +105,7 @@ python main.py
 
 ---
 
-## 🏆 5. Production Telemetry Log Exhibit (生产环境雷达盘面实录)
+## 🏆 6. Production Telemetry Log Exhibit (生产环境雷达盘面实录)
 
 ```text
 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
