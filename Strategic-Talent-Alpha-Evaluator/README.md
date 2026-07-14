@@ -1,4 +1,4 @@
-# 👑 Strategic-Talent-Alpha-Evaluator (V1.0)
+# 👑 Strategic-Talent-Alpha-Evaluator (V1.5.0)
 ### 🇸🇬 Industrial-Grade Enterprise AI Talent Screening & Pipeline Engineering System
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -77,15 +77,13 @@ Integrated a decoupled **Regex-based automated feature extraction engine** into 
 - **Non-Greedy Extraction**: Employs non-greedy regex logic (`.*?`) to prevent data noise contamination, ensuring high-fidelity output.
 - **Config-Driven**: Extraction patterns are fully managed in `config/settings.py`, allowing HR teams to pivot screening criteria instantly without triggering a production downtime.
 
-### 🤖 Core 6: Engineering Breakthroughs
-1. **Intelligent Feature Extraction**: Decoupled Regex engine for automated parsing of unstructured resume data.
-2. **Data Normalization Engine**: Built-in semantic mapping dictionary to standardize fragmented skill tags (e.g., "py" -> "Python").
-3. **Robust Circuit Breaker (熔断机制)**: Implemented decorator-based validation to intercept malformed data at the pipeline entrance.
-4. **Weighted Scoring Engine (V1.0 Update)**: 
-   - **Capability Scoring**: Multi-dimensional weighted analysis engine (Python: 0.4, SQL: 0.3, etc.).
-   - **Hard-Constraint Enforcement**: Strictly enforces "Must-Have" skill prerequisites; non-compliant candidates are automatically filtered.
-   - **Synergy Bonus (协同加成)**: Non-linear scoring logic that rewards high-value skill clusters (e.g., Python + ML Bonus).
-   - **Business Protection (异常处理)**: Implemented 30-point baseline protection for zero-skill entries, ensuring production stability.
+### 🤖 Core 6: Dual-Track Cascading Scoring Engine (V1.5.0 Update)
+Re-architected the linear scoring model into an industrial-grade **Dual-Track Evaluation Matrix**, fusing technical hard-skills with business/compliance acumen.
+   - **Mandatory Survival Pools (刚性准入网)**: Implemented a rigorous double-gate mechanism. Candidates must simultaneously possess "Technical Foundations" (e.g., Python/SQL) AND "Compliance/Business Logic" (e.g., PDPA/Security). Missing either results in an immediate 0.0 score.
+   - **Cross-Domain Synergy Bonus (跨界复合红利)**: Config-driven dynamic premium triggers for outlier talents. 
+     - *FinOps Bonus*: High-Throughput + Cost Optimization
+     - *AI Infra Bonus*: LLM/Agentic + Cloud/Docker Deployments
+   - **Cascading Kill-Switch (级联熔断大闸)**: Employs a 4:6 global weight distribution (Tech vs. Project). If any single track yields a 0 score, the final `market_score` is ruthlessly zeroed out, entirely blocking biased candidates from the delivery zone.
 
 ---
 
@@ -109,21 +107,19 @@ python main.py
 
 ```text
 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-👑 [SYSTEM CENTRAL] V1.0 Modular Pipeline Firing Up...
+👑 [SYSTEM CENTRAL] V1.5.0 Dual-Track Engine Firing Up...
 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
 
---- 🛡️ [STAGE 1] 前端并网风控检查 ---
-[TELEMETRY] 资产并网安全。初始 Raw 数据: 36 行.
+[STAGE 1] --- 🛡️ 前端并网风控 ---
+✅ 资产并网成功. 初始行数: 100
 
---- ⚔️ [STAGE 2] 核心技术模块化绞杀 ---
-[TELEMETRY] 1. 僵尸熔断完毕. 剩余高价值资产: 33 行.
-[TELEMETRY] 2. 信息密度排序去重完毕. 独一主权资产: 31 行.
-[TELEMETRY] 3. 跨舱并网成功。标准技能标签提取已合拢.
-[TELEMETRY] 4. 静态补丁依据中央宪法填充完毕.
+[STAGE 2] --- ⚔️ 核心技术绞杀与特征提取 ---
+[TELEMETRY] 正在处理特征源列: skills
+[TELEMETRY] 启动大盘双轨打分引擎...
+[TELEMETRY] 商业打分引擎点火完毕，多维加权分析已落盘。
 
---- 🔒 [STAGE 3] 后端落锁维护出货 ---
-[TELEMETRY] 物理落锁成功！生成纯净化黄金数据: 30 行.
-➡️ 终极交付地址: Strategic-Talent-Alpha-Evaluator/data/processed/cleaned_v1_master.csv
+[STAGE 3] --- 🔒 后端落锁维护 ---
+✅ 黄金资产已落锁至: Strategic-Talent-Alpha-Evaluator/data/03_processed/cleaned_v1_master.csv
 
 🏆 [SUCCESS] Execution complete. Deliverable secured into golden zone.
 ==================================================

@@ -7,6 +7,14 @@ def extract_regex_feature(text, pattern, default="N/A"):
     match = pattern.search(text)
     return match.group(0) if match else default
 
+def safe_read_csv(file_path):
+    """全局统一的受控读取接口，所有 Pipeline 环节必须调用此函数"""
+    return pd.read_csv(
+        file_path, 
+        dtype=str,              # 强制所有列读取为字符串，彻底禁止盲测
+        keep_default_na=False   # 禁止 Pandas 把 'None' 或 'Null' 乱解析
+    )
+
 def extract_all_skills(text, pattern):
     """提取所有匹配到的技能点并返回列表"""
     if not isinstance(text, str):
