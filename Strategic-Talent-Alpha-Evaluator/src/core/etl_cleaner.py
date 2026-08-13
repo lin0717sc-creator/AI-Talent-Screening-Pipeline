@@ -1,6 +1,3 @@
-# ==========================================
-# 文件路径: src/core/etl_cleaner.py
-# ==========================================
 import pandas as pd
 import re
 from config import settings
