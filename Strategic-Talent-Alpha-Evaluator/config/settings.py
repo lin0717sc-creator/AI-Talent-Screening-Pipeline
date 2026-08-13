@@ -18,7 +18,7 @@ STORAGE_REGISTRY = {
 RESUME_COLUMN = "skills" 
 
 # ==============================================================================
-# 🛡️ 2. 传统Regex清洗引擎与历史数据字典 (特征探针全面扩容)
+# 🛡️ 2.1 传统Regex清洗引擎与历史数据字典 (特征探针全面扩容)
 # ==============================================================================
 EMAIL_PATTERN = re.compile(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+')
 
@@ -64,10 +64,36 @@ SKILL_MAPPING = {
 }
 
 # ==============================================================================
+# 🛡️ 2.2 高潜特征与商业落地探针 (Potential & Project Matrix) - 第19天新增
+# ==============================================================================
+# 锁定高信息密度的重构词与商业决策词，拒绝形容词
+PROJECT_PATTERN = re.compile(
+    r'\b(A/B Testing|Optimization|Framework Rebuild|Zero-to-One|Cost Reduction|ROI|'
+    r'FinOps|End-to-End|Cross-functional|Automation|Scalability|Throughput)\b', 
+    re.IGNORECASE
+)
+
+# 降维收敛：将五花八门的业务黑话，强制归一化为咱们打分引擎里需要的标准词
+PROJECT_MAPPING = {
+    'a/b testing': 'ab_testing',
+    'optimization': 'optimization',
+    'framework rebuild': 'rebuild',
+    'zero-to-one': '0_to_1',
+    'cost reduction': 'cost_reduction',
+    'roi': 'roi',
+    'finops': 'finops',
+    'end-to-end': 'end_to_end',
+    'cross-functional': 'cross_functional',
+    'automation': 'automation',
+    'scalability': 'scalability',
+    'throughput': 'throughput'
+}
+
+# ==============================================================================
 # 🧱 3. 🧱 维度一：技术能力打分矩阵配置（高召回语义池驱动）
 # ==============================================================================
-# 技术弹性准入网
-TECH_FOUNDATION_POOL = {'python', 'sql', 'pandas', 'cloud', 'github', 'github_portfolio'}
+# 技术弹性准入网 (融合了最新的精英技术要求)
+TECH_FOUNDATION_POOL = {'python', 'sql', 'pandas', 'cloud', 'github', 'github_portfolio', 'tableau', 'machine_learning', 'cloud_computing', 'docker', 'llm', 'aws'}
 COMPLIANCE_CONCEPT_POOL = {'pdpa', 'mom', 'compliance', 'privacy', 'governance', 'regulation', 'security', 'audit'}
 
 # 技术特征身价计分板
@@ -87,21 +113,26 @@ TECH_SKILL_WEIGHTS = {
     'api_integration': 10,
     'github_portfolio': 20,        # 开源主权铁证
     'tableau': 10,                 # 商业智能可视化
-    'powerbi': 10
+    'powerbi': 10,
+    'cloud_computing': 10          # 补充精英资产用词
 }
 
 # ==============================================================================
 # 🏁 4. 🧭 维度二：项目产出打分矩阵配置（应届生自愈双轨路由）
 # ==============================================================================
-# 项目弹性准入网（效益池与交付池）
+# 项目弹性准入网（完美保留你的工业轨与自研轨，并注入高潜极客词汇）
 PROJECT_BENEFIT_POOL = {
-    'roi', 'cost_savings', 'revenue_per_employee', 'l_dec', '人效', '成本压缩',  # 工业轨
-    'simulation_metrics', 'accuracy_delta', 'performance_delta', 'benchmark_optimization' # 自研/学术轨
+    'roi', 'cost_savings', 'revenue_per_employee', 'l_dec', '人效', '成本压缩',  # 你的原版硬核词
+    'simulation_metrics', 'accuracy_delta', 'performance_delta', 'benchmark_optimization',
+    'finops', 'cost_reduction', 'optimization', 'scalability', 'throughput'       # 第19天新增高潜词
 }
+
 PROJECT_DELIVERY_POOL = {
-    'production_launch', 'cloud_deployment', 'saas_commercialization',  # 工业轨
-    'local_end_to_end_integration', 'github_open_source_release', 'thesis_prototype_verification' # 自研/学术轨
+    'production_launch', 'cloud_deployment', 'saas_commercialization',  
+    'local_end_to_end_integration', 'github_open_source_release', 'thesis_prototype_verification',
+    'end_to_end', 'ab_testing', 'cross_functional', 'automation', 'framework_rebuild' # 第19天新增高潜词
 }
+
 # 项目特征身价计分板
 PROJECT_OUTPUT_WEIGHTS = {
     'million_row': 20,
@@ -115,8 +146,14 @@ PROJECT_OUTPUT_WEIGHTS = {
     'predictive_modeling': 15,
     'regional_hq_alignment': 10,
     'global_synergy': 10,
-    'saas_interface': 10
+    'saas_interface': 10,
+    # 下方为新增高潜词记分
+    'finops': 20,
+    'ab_testing': 15,
+    'framework_rebuild': 20,
+    'end_to_end': 15
 }
+
 # ==============================================================================
 # ⚔️ 5. 🔥 🔥 核心核心：补齐“跨界硬能力混合红利”配置矩阵 🔥 🔥
 # ==============================================================================
@@ -155,3 +192,57 @@ GLOBAL_WEIGHT_PROJECT = 0.6
 
 TECH_SCORE_CAP = 100
 PROJECT_SCORE_CAP = 100
+
+# ==============================================================================
+# ⚠️ 7. 维度三：V3.0 稳定性与离职风险特征雷达（Stability Radar）
+# ==============================================================================
+
+# 1. 内部调动与集团并购特征（用于 Phase 0 并网防御）
+MERGE_WORDS = r'(?i)\b(acquired|merged|internal transfer|promoted|内部调动|晋升|收购|合并)\b'
+
+# 2. 特殊用工性质特征（用于 Phase 2 黄牌截留）
+GIG_WORDS = r'(?i)\b(contract|freelance|consultant|vendor|outsourcing|外包|顾问|独立开发者)\b'
+FOUNDER_WORDS = r'(?i)\b(founder|co-founder|entrepreneur|ceo|创始人|联合创始人)\b'
+
+# 3. 宏观经济/裁员受害者特征（用于 Phase 3-A 捡漏池截留）
+LAYOFF_WORDS = r'(?i)\b(layoff|retrenchment|redundancy|restructure|company closed|downsizing|裁员|业务裁撤|公司倒闭)\b'
+
+# 稳定性阈值定义 (Hyperparameters)
+STABILITY_THRESHOLDS = {
+    'fresh_grad_max_exp': 2.0,      # 应届生绝对豁免线 (年)
+    'mercenary_max_tenure': 12,     # 纯血雇佣兵绞杀线 (个月)
+    'anchor_tenure': 60,            # 定海神针安全线 (个月)
+    'dangerous_gap': 6              # 危险断层线 (个月)
+}
+
+# ==============================================================================
+# 🕵️ 8. 维度四：代码主权锚点探针 (Proof of Work) - V4新增防忽悠大闸
+# ==============================================================================
+POW_PATTERNS = [
+    r'(?i)github\.com/[a-zA-Z0-9_-]+',
+    r'(?i)gitee\.com/[a-zA-Z0-9_-]+',
+    r'(?i)kaggle\.com/[a-zA-Z0-9_-]+',
+    r'(?i)huggingface\.co/[a-zA-Z0-9_-]+',
+    r'(?i)[a-zA-Z0-9_-]+\.(dev|io)' # 个人极客博客
+]
+
+# ==============================================================================
+# ⚙️ 9. 业务场景动态权重矩阵 (Talent Alpha) - V4变形金刚引擎
+# ==============================================================================
+TALENT_WEIGHT_PROFILES = {
+    "PIONEER_TEAM": {
+        "desc": "急缺技术突破的先遣团队 (看重能力与潜力，极度包容跳槽)",
+        "weights": {"capability": 0.50, "potential": 0.40, "stability": 0.10}
+    },
+    "LOCAL_STEADY": {
+        "desc": "新加坡本地高度重视培训成本的运维团队 (极度看重稳定性)",
+        "weights": {"capability": 0.30, "potential": 0.20, "stability": 0.50}
+    },
+    "BALANCED_CORE": {
+        "desc": "中坚骨干团队 (大厂标准配置)",
+        "weights": {"capability": 0.40, "potential": 0.30, "stability": 0.30}
+    }
+}
+
+# 当前激活的业务线配置（HR/指挥官 可随时在这里切换场景）
+ACTIVE_PROFILE = "BALANCED_CORE"
