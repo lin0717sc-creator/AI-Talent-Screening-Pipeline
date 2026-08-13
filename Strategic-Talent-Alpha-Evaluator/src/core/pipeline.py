@@ -1,6 +1,3 @@
-# ==========================================
-# 文件路径: src/core/pipeline.py
-# ==========================================
 import os
 import pandas as pd
 from config import settings
