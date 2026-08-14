@@ -1,0 +1,12 @@
+{
+    "candidate_id": "SYS_ERROR_FALLBACK",
+    "capability_score": 0,
+    "stability_score": 0,
+    "talent_alpha": 0,
+    "is_high_risk": true,
+    "risk_tags": [
+        "FORMAT_CORRUPTION",
+        "LLM_HALLUCINATION"
+    ],
+    "strategic_advice": "数据解析严重崩溃，此候选人档案已隔离，需人工介入。"
+}
