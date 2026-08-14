@@ -1,25 +1,37 @@
 # 👑 Strategic-Talent-Alpha-Evaluator (V4.0.0)
-### 🇸🇬 Industrial-Grade Enterprise AI Talent Screening & Pipeline Engineering System
+### 🇸🇬 Industrial-Grade Enterprise AI Talent Screening & Data Pipeline
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Data Governance](https://img.shields.io/badge/Compliance-SG%20PDPA-red.svg)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Modular%20Pipeline-green.svg)]()
 
-## 📊 1. Commercial Value Proposition (商业价值阐述)
-In high-volume recruitment scenarios (e.g., Southeast Asian tech giants receiving over 100K+ resumes per quarter), legacy Applicant Tracking Systems (ATS) suffer from excessive noise, computational redundancy, and fragmented data lineages.
 
-**Strategic-Talent-Alpha-Evaluator (V4.0)** is a high-performance, multi-layered data pipeline designed to ingest highly chaotic applicant datasets, evaluate both **downside risk (Stability)** and **upside potential (Capability & PoW)**, and deploy them into dynamic business profiles.
+## 📊 1. Commercial Context & Value Proposition (商业价值阐述)
+In the APAC tech hub of Singapore, Multinational Corporations (MNCs) and tech giants face a critical recruitment bottleneck: **Massive application volume paired with an abysmal signal-to-noise ratio.** Legacy Applicant Tracking Systems (ATS) suffer from excessive noise and fragmented data, causing HR departments to waste countless hours manually filtering out unqualified candidates.
+
+**Strategic-Talent-Alpha-Evaluator (V4.0)** is a deterministic, high-concurrency data pipeline engineered to solve this. It systematically ingests highly chaotic datasets, evaluates both **downside risk (Stability)** and **upside potential (Capability & PoW)**, and orchestrates LLM-driven strategic insights to deploy talent into dynamic business profiles.
 
 * **Tri-Pool Asset Routing**: Instead of silent vaporizations, candidates are surgically triaged into three distinct commercial pools: 🟢 Golden Market (Ready-to-Hire), 🟡 Grey-Market Arbitrage (Human Audit), and 🔴 Graveyard (Fatal Denials).
-* **Dynamic Talent Alpha**: Instantly shifts screening logic (Weights: Capability/Potential/Stability) based on changing departmental needs (e.g., Pioneer Team vs. Steady Local Ops).
-* **Compliance Shield**: Architected strictly above the red line of the **Singapore Personal Data Protection Act (PDPA)**, featuring native sandbox isolation to prevent data leaks.
+* **Dynamic Talent Alpha & Risk Kill-Switch**: Instantly shifts screening logic (Weights: Capability/Potential/Stability) based on changing departmental needs, while executing a strict Double-Bottom-Line risk evaluation to eliminate biased or unqualified noise.
+* **Singapore PDPA Compliance Shield**: Architected strictly above the red line of the **Singapore Personal Data Protection Act (PDPA)**, featuring native sandbox isolation and an LLM formatting firewall to ensure zero data leakage.
 
 ---
 
-## 🏗️ 2. System Architecture & Directory Topology (项目目录架构图)
+## 🧠 2. Core Algorithm: The Talent-Alpha Formula
+Instead of binary tags, the engine synthesizes a continuous **Talent Alpha ($\alpha$)** valuation metric. The core logic dynamically shifts weights based on the active business profile (e.g., *Pioneer Team* vs. *Local Steady Ops*).
+
+$$\alpha = (Capability \times W_c) + (Potential \times W_p) + (Stability \times W_s) \times Premium_{PoW}$$
+
+* **Stability Deductive Operator**: A continuous 100-to-0 deduction model. Drops below 30 trigger an instant `Red-Line Kill-Switch`.
+* **Double-Bottom-Line Matrix**: Instantly eliminates candidates showing zero aptitude in either Hard Tech Skills or Business Mindset.
+* **PoW (Proof of Work) Premium**: Candidates with verified GitHub/Kaggle digital footprints receive a 1.2x Alpha multiplier.
+
+---
+
+## 🏗️ 3. System Architecture & Directory Topology (项目目录架构图)
 The framework adopts the **"1+1+1+1 Modular Stacking" (积木式叠加架构)** principle. It strictly decouples global orchestration, domain configurations, stateless extractors, and risk/capability engines.
 
-
+```text
 Strategic-Talent-Alpha-Evaluator/
 ├── .env                    # 🔑 Environment Variables & Security Credentials
 ├── .gitignore              # 🛡️ Data Leakage Firewall (PDPA Red Line Shield)
@@ -54,18 +66,16 @@ Strategic-Talent-Alpha-Evaluator/
     └── utils/
         ├── __init__.py
         └── helpers.py        # Stateless Pure Functional Utilities
+```
 
 ---
 
-## 🛠️ 3. Technical Stack (技术栈选型)
-- **Runtime**: Python 3.11+
-- **Data Governance**: Pandas (ETL Pipeline, Vectorized In-Memory Stream)
-- **Intelligent Engine**: Regex Pattern Matching, Deductive Risk Radar & Multi-Factor Matrix
-- **Architecture**: Modular Pipeline Design (Decoupled Operator-Controller Pattern)
+## 🛠️ 4. Anti-Avalanche Concurrency Architecture
+Built upon Pandas and tqdm.progress_apply(), the system effortlessly handles 10,000+ rows of concurrent throughput. Individual catastrophic row failures (e.g., malicious data injections) are isolated via try-except containment modules, ensuring Zero Single-Point-of-Failure (SPOF) and 100% pipeline survivability.
 
 ---
 
-## ⚔️ 4. Core Engineering Breakthroughs (核心硬核工程突破)
+## ⚔️ 5. Core Engineering Breakthroughs (核心硬核工程突破)
 
 ### 🛡️ Core 1: Decoupled Compute & Config Architecture (计算与配置彻底解耦)
 All strategic parameters (Regex dictionaries, risk thresholds, dynamic weight profiles) are extracted into `config/settings.py`. The execution engines (`src/core/`) remain stateless and deterministic, achieving 100% decoupling from dynamic business requirement shifts.
@@ -98,7 +108,7 @@ Replaces standard `.apply()` with `tqdm.progress_apply()`, providing real-time t
 
 ---
 
-## 🚀 5. Automated Ignition Sequence (系统一键总启航)
+## 🚀 6. Automated Ignition Sequence (系统一键总启航)
 
 ```bash
 # Step 1: Data Ingestion (原始数据并网入库)
@@ -111,12 +121,11 @@ python main.py
 # 🟢 Golden Market: data/03_processed/cleaned_v1_master.csv
 # 🟡 Grey Arbitrage: data/03_processed/cleaned_v1_master_human_audit.csv
 # 🔴 Graveyard Log: data/03_processed/cleaned_v1_master_rejected_audit.csv
-
 ```
 
 ---
 
-## 🏆 6. Production Telemetry Log Exhibit (生产环境雷达日志)
+## 🏆 7. Production Telemetry Log Exhibit (生产环境雷达日志)
 
 ```text
 🚀 [SYSTEM CENTRAL] V4.0 智能人才招聘筛选引擎点火启动...
@@ -144,3 +153,23 @@ ai_master@dev.com          92.0    核心战神，立刻安排面试！
    geek.x@dev.com          89.5    核心战神，立刻安排面试！
 
 🎉 报告指挥官，V4.0 引擎运行成功！黄金大盘、灰度捡漏池与阵亡名册已全部落锁！
+```
+---
+
+## 🛑 8. AI Hallucination Firewall & Payload Exhibit
+To prevent LLM format corruption (e.g., Markdown leakage, missing keys), the pipeline enforces a strict **JSON Schema Validator (`jsonschema`)**. Any corrupted output is physically intercepted, automatically scrubbed, or routed to a deterministic Fallback protocol.
+
+**🔥 Exhibit: The Validated Golden JSON Payload**
+```json
+{
+    "candidate_id": "hacker.x@test.com",
+    "capability_score": 85.5,
+    "stability_score": 92.0,
+    "talent_alpha": 88.75,
+    "is_high_risk": false,
+    "risk_tags": [],
+    "strategic_advice": "High-Alpha Target. Expedite to technical interview round immediately."
+}
+```
+---
+
