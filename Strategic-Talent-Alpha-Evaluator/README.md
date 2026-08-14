@@ -28,7 +28,25 @@ $$\alpha = (Capability \times W_c) + (Potential \times W_p) + (Stability \times 
 
 ---
 
-## 🏗️ 3. System Architecture & Directory Topology (项目目录架构图)
+## 🛑 3. AI Hallucination Firewall & Payload Exhibit
+To prevent LLM format corruption (e.g., Markdown leakage, missing keys), the pipeline enforces a strict **JSON Schema Validator (`jsonschema`)**. Any corrupted output is physically intercepted, automatically scrubbed, or routed to a deterministic Fallback protocol.
+
+**🔥 Exhibit: The Validated Golden JSON Payload**
+```json
+{
+    "candidate_id": "hacker.x@test.com",
+    "capability_score": 85.5,
+    "stability_score": 92.0,
+    "talent_alpha": 88.75,
+    "is_high_risk": false,
+    "risk_tags": [],
+    "strategic_advice": "High-Alpha Target. Expedite to technical interview round immediately."
+}
+```
+
+---
+
+## 🏗️ 4. System Architecture & Directory Topology (项目目录架构图)
 The framework adopts the **"1+1+1+1 Modular Stacking" (积木式叠加架构)** principle. It strictly decouples global orchestration, domain configurations, stateless extractors, and risk/capability engines.
 
 ```text
@@ -67,11 +85,6 @@ Strategic-Talent-Alpha-Evaluator/
         ├── __init__.py
         └── helpers.py        # Stateless Pure Functional Utilities
 ```
-
----
-
-## 🛠️ 4. Anti-Avalanche Concurrency Architecture
-Built upon Pandas and tqdm.progress_apply(), the system effortlessly handles 10,000+ rows of concurrent throughput. Individual catastrophic row failures (e.g., malicious data injections) are isolated via try-except containment modules, ensuring Zero Single-Point-of-Failure (SPOF) and 100% pipeline survivability.
 
 ---
 
@@ -155,21 +168,3 @@ ai_master@dev.com          92.0    核心战神，立刻安排面试！
 🎉 报告指挥官，V4.0 引擎运行成功！黄金大盘、灰度捡漏池与阵亡名册已全部落锁！
 ```
 ---
-
-## 🛑 8. AI Hallucination Firewall & Payload Exhibit
-To prevent LLM format corruption (e.g., Markdown leakage, missing keys), the pipeline enforces a strict **JSON Schema Validator (`jsonschema`)**. Any corrupted output is physically intercepted, automatically scrubbed, or routed to a deterministic Fallback protocol.
-
-**🔥 Exhibit: The Validated Golden JSON Payload**
-```json
-{
-    "candidate_id": "hacker.x@test.com",
-    "capability_score": 85.5,
-    "stability_score": 92.0,
-    "talent_alpha": 88.75,
-    "is_high_risk": false,
-    "risk_tags": [],
-    "strategic_advice": "High-Alpha Target. Expedite to technical interview round immediately."
-}
-```
----
-
