@@ -1,5 +1,7 @@
 import os
 import re
+import sys
+from pydantic import BaseModel, Field, model_validator, ValidationError  # 🚀 V5.0 新增：防弹衣依赖
 
 # ==============================================================================
 # 📂 1. 📂 物理目录与资产寻址注册表（绝对路径硬锁死，绝杀 FileNotFoundError）
@@ -246,3 +248,44 @@ TALENT_WEIGHT_PROFILES = {
 
 # 当前激活的业务线配置（HR/指挥官 可随时在这里切换场景）
 ACTIVE_PROFILE = "BALANCED_CORE"
+
+# ==============================================================================
+# 🛡️ 10. V5.0 架构师级防弹配置中心 (Pydantic V2 逻辑互斥锁)
+# ==============================================================================
+class HRConfigGuard(BaseModel):
+    """拦截 HR 乱改权重配置的底层装甲"""
+    capability: float = Field(..., ge=0.0, le=1.0)
+    potential: float = Field(..., ge=0.0, le=1.0)
+    stability: float = Field(..., ge=0.0, le=1.0)
+
+    # 逻辑互斥参数 (防止精神分裂的商业决策)
+    junior_tolerance_score: int = Field(default=50, ge=0, le=100)
+    architect_demand_score: int = Field(default=80, ge=0, le=100)
+
+    @model_validator(mode='after')
+    def check_logical_mutex_and_sum(self):
+        # 拦截网 A：数学总和必须闭环
+        total_weight = self.capability + self.potential + self.stability
+        if round(total_weight, 2) != 1.00:
+            raise ValueError(f"【数学契约断裂】三维权重总和必须等于 1.0！当前总和为: {total_weight}")
+        
+        # 拦截网 B：逻辑互斥锁 
+        if self.junior_tolerance_score > 80 and self.architect_demand_score > 80:
+            raise ValueError("【逻辑互斥拦截】不可同时将 '初级宽容度' 与 '架构师底线' 均设为最高，请重新对齐商业目标！")
+        return self
+
+def _lock_active_profile():
+    """系统启动自检，强杀任何非法的 HR 配置参数"""
+    try:
+        active_weights = TALENT_WEIGHT_PROFILES[ACTIVE_PROFILE]['weights']
+        # 利用 Pydantic 模具验证当前激活的业务配置
+        safe_config = HRConfigGuard(**active_weights)
+        print(f"🛡️ [SYSTEM READY] '{ACTIVE_PROFILE}' 权重已通过 Pydantic V2 物理验证，放行。")
+        return safe_config
+    except ValidationError as e:
+        print("\n🚨 [FATAL ERROR] 截获非法的 HR 配置参数！系统已启动物理拒载！")
+        print(f"死因诊断:\n{e}\n")
+        sys.exit(1)
+
+# 🚦 在模块被导入的瞬间，自动执行自检落锁
+SAFE_SETTINGS = _lock_active_profile()
