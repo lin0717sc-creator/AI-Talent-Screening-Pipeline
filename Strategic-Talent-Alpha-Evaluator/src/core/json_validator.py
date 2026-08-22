@@ -1,3 +1,6 @@
+# ==========================================
+# 用于剥离大模型 <thought_process> 标签、提取纯净 JSON 并拦截报错的动作
+# ==========================================
 import json
 import re
 from jsonschema import validate, ValidationError
@@ -5,7 +8,7 @@ from config.schema_config import AISchemaRegistry
 
 class JSONEnforcer:
     """
-    大模型输出执法者：负责清洗废话、校验格式、触发熔断
+    大模型输出执法者：负责提取思维链(CoT)、清洗废话、校验格式、触发熔断
     """
     def __init__(self):
         # 挂载前端定好的宪法 (Schema)
@@ -13,9 +16,14 @@ class JSONEnforcer:
 
     def clean_llm_noise(self, raw_output):
         """
-        物理剥离大模型的废话和 Markdown 伪装
+        物理剥离大模型的废话、提取 <thought_process>，并强行榨取纯净 JSON 资产
         """
         text = str(raw_output).strip()
+        
+        # 🚀 绞杀暗坑三（V2.0 新增）：提取并打印 AI 的“内心戏”用于后台审计
+        thought_match = re.search(r'<thought_process>(.*?)</thought_process>', text, re.DOTALL)
+        if thought_match:
+            print(f"🧠 [AI 批判性推演日志]:\n{thought_match.group(1).strip()}\n" + "-"*40)
         
         # 🚨 终极防 IDE 截断写法：用 `{3}` 代替连续三个反引号
         # 绞杀暗坑二：剔除 Markdown 代码块包裹
@@ -40,7 +48,7 @@ class JSONEnforcer:
         
         while attempt < max_retries:
             try:
-                # 1. 物理清洗噪声
+                # 1. 物理清洗噪声 (现已包含 CoT 思维链剥离功能)
                 cleaned_text = self.clean_llm_noise(current_input)
                 
                 # 2. 尝试解析 JSON (拦截非标准引号、缺少逗号等错误)
@@ -50,6 +58,7 @@ class JSONEnforcer:
                 validate(instance=parsed_json, schema=self.schema)
                 
                 # 如果顺利走到这里，说明是纯净的黄金数据！
+                print("✅ [落锁成功] 真实评估分数已剥离并经过 Schema 验证。")
                 return parsed_json
                 
             except (json.JSONDecodeError, ValidationError) as e:
@@ -58,8 +67,7 @@ class JSONEnforcer:
                 print(f"⚠️ [熔断警报] 第 {attempt} 次解析失败。原因: {str(e)[:50]}...")
                 print("🚨 报告指挥官，检测到噪声干扰，格式锁死引擎已启动自动修复！")
                 
-                # 在真实的业务流中，这里会调用大模型 API 并传入报错信息让它重写。
-                # 由于这里是本地测试链路，达到最大重试次数后直接返回兜底数据。
+                # 达到最大重试次数后直接返回兜底数据
                 if attempt == max_retries:
                     print("❌ 修复上限耗尽。强制启动防崩溃兜底预案！")
                     return self._generate_fallback_json()
