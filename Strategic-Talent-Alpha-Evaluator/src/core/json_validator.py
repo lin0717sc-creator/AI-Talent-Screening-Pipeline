@@ -81,5 +81,12 @@ class JSONEnforcer:
             "talent_alpha": 0,
             "is_high_risk": True,
             "risk_tags": ["FORMAT_CORRUPTION", "LLM_HALLUCINATION"],
-            "strategic_advice": "数据解析严重崩溃，此候选人档案已隔离，需人工介入。"
+            "strategic_advice": "数据解析严重崩溃，此候选人档案已隔离，需人工介入。",
+            # 🚀 新增：即使崩溃，也要输出合规的证据矩阵兜底结构
+            "evidence_matrix": {
+                "core_claim": "系统解析崩溃",
+                "supporting_evidence": ["无有效数据"],
+                "missing_evidence": ["数据流中断"],
+                "consistency_score": "Low"
+            }
         }

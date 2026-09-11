@@ -62,7 +62,20 @@ SKILL_MAPPING = {
     'docker': 'docker',
     'llm': 'llm',
     'prompt engineering': 'prompt_engineering',
-    'agentic workflow': 'agentic_workflow'
+    'agentic workflow': 'agentic_workflow',
+    # 🎯 新增：常规后端与微服务基础库 (打破词典盲区)
+    'java': 'java',
+    'go': 'go',
+    'spring': 'spring',
+    'mysql': 'mysql',
+    'redis': 'redis',
+    'mongodb': 'mongodb',
+    'kubernetes': 'kubernetes',
+    'git': 'git',
+    'linux': 'linux',
+    'kafka': 'kafka',
+    'nginx': 'nginx',
+    'elasticsearch': 'elasticsearch'
 }
 
 # ==============================================================================
@@ -116,7 +129,20 @@ TECH_SKILL_WEIGHTS = {
     'github_portfolio': 20,        # 开源主权铁证
     'tableau': 10,                 # 商业智能可视化
     'powerbi': 10,
-    'cloud_computing': 10          # 补充精英资产用词
+    'cloud_computing': 10,          # 补充精英资产用词
+    # 🎯 新增：常规后端基础分数 (防刷分引擎会自动 Top 5 封顶，不怕给多)
+    'java': 10,
+    'go': 15,
+    'spring': 10,
+    'mysql': 10,
+    'redis': 10,
+    'mongodb': 10,
+    'kubernetes': 15,
+    'git': 5,
+    'linux': 10,
+    'kafka': 15,
+    'nginx': 10,
+    'elasticsearch': 15
 }
 
 # ==============================================================================
@@ -229,25 +255,28 @@ POW_PATTERNS = [
 ]
 
 # ==============================================================================
-# ⚙️ 9. 业务场景动态权重矩阵 (Talent Alpha) - V4变形金刚引擎
+# ⚙️ 9. 业务场景动态权重矩阵 (Talent Alpha) - 升级为 V6.0 动态阈值路由 (Precision vs Recall)
 # ==============================================================================
 TALENT_WEIGHT_PROFILES = {
     "PIONEER_TEAM": {
-        "desc": "急缺技术突破的先遣团队 (看重能力与潜力，极度包容跳槽)",
-        "weights": {"capability": 0.50, "potential": 0.40, "stability": 0.10}
+        "desc": "急缺技术突破的先遣团队 (看重能力与潜力，极度包容跳槽，追求高查全率 Recall)",
+        "weights": {"capability": 0.50, "potential": 0.40, "stability": 0.10},
+        "strict_density_filter": False  # 🚀 稀缺人才，关闭字数过滤！交给大模型去沙里淘金
     },
     "LOCAL_STEADY": {
-        "desc": "新加坡本地高度重视培训成本的运维团队 (极度看重稳定性)",
-        "weights": {"capability": 0.30, "potential": 0.20, "stability": 0.50}
+        "desc": "新加坡本地高度重视培训成本的运维团队 (极度看重稳定性，追求高查准率 Precision)",
+        "weights": {"capability": 0.30, "potential": 0.20, "stability": 0.50},
+        "strict_density_filter": True   # 🛡️ 容错率低，开启信息密度大闸！拦截简历过于单薄者
     },
     "BALANCED_CORE": {
-        "desc": "中坚骨干团队 (大厂标准配置)",
-        "weights": {"capability": 0.40, "potential": 0.30, "stability": 0.30}
+        "desc": "中坚骨干团队 (大厂标准配置，兼顾高查准率 Precision)",
+        "weights": {"capability": 0.40, "potential": 0.30, "stability": 0.30},
+        "strict_density_filter": True   # 🛡️ 同样开启大闸，宁可错杀绝不放过废简历
     }
 }
 
 # 当前激活的业务线配置（HR/指挥官 可随时在这里切换场景）
-ACTIVE_PROFILE = "BALANCED_CORE"
+ACTIVE_PROFILE = "PIONEER_TEAM"
 
 # ==============================================================================
 # 🛡️ 10. V5.0 架构师级防弹配置中心 (Pydantic V2 逻辑互斥锁)

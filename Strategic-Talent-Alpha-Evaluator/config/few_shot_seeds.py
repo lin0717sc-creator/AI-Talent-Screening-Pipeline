@@ -20,7 +20,13 @@ FEW_SHOT_EXAMPLES = """
     "talent_alpha": 35.0,
     "is_high_risk": true,
     "risk_tags": ["Logical_Inconsistency", "Low_Business_Acumen", "PPT_Warrior_Risk"],
-    "strategic_advice": "严重缺乏落地执行的肌肉记忆与真实 ROI，建议直接淘汰或进行极高压的代码手写机考。"
+    "strategic_advice": "严重缺乏落地执行的肌肉记忆与真实 ROI，建议直接淘汰或进行极高压的代码手写机考。",
+    "evidence_matrix": {
+        "core_claim": "主导公司 AI 转型，撬动千万级营收",
+        "supporting_evidence": ["罗列了 50 种工具名称"],
+        "missing_evidence": ["无真实 ROI 测算公式", "无系统架构描述", "无排障与部署细节"],
+        "consistency_score": "Low"
+    }
 }
 
 === 示例 2：高潜护航保送（跨界破局者 + 诚实螺丝钉） ===
@@ -41,6 +47,12 @@ FEW_SHOT_EXAMPLES = """
     "talent_alpha": 90.0,
     "is_high_risk": false,
     "risk_tags": [],
-    "strategic_advice": "具备极强的局部逻辑闭环与商业落地直觉，虽然履历单薄，但属于极具培养价值的高潜执行者，强烈建议发放下级 Offer。"
+    "strategic_advice": "具备极强的局部逻辑闭环与商业落地直觉，虽然履历单薄，但属于极具培养价值的高潜执行者，强烈建议发放下级 Offer。",
+    "evidence_matrix": {
+        "core_claim": "使用 Python 将每周对账时间从 20 小时缩短至 2 小时",
+        "supporting_evidence": ["明确了非 Leader 的执行层身份", "提供 GitHub 源码链接自证"],
+        "missing_evidence": ["无"],
+        "consistency_score": "High"
+    }
 }
 """
