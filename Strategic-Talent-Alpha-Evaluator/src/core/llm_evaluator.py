@@ -81,7 +81,7 @@ class LLMEvaluator:
         self.cache_file = os.path.join(cache_dir, "llm_evidence_cache.json")
         self.cache_db = self._load_cache()
         # ⚠️ 这里填入你的真实 API Key
-        self.api_key = "sk-7c4f7e909f8d4e069be2c2a5efcf6efd"
+        self.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
     def _load_cache(self):
         if not os.path.exists(self.cache_dir):
