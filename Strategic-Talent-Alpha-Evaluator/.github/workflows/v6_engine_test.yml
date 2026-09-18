@@ -1,4 +1,4 @@
-name: V6.0 Core Engine Auto-Test
+name: V7.1 Core Engine Auto-Test
 
 # 触发条件：当你把代码 push 到 GitHub 时自动运行
 on:
@@ -23,6 +23,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: 🚀 点火测试：运行 V6.0 引擎
+    - name: 🚀 点火测试：运行 V7.1 引擎
       run: |
         python main.py

@@ -4,15 +4,41 @@
 import json
 import re
 from jsonschema import validate, ValidationError
-from config.schema_config import AISchemaRegistry
+# 🚀 移除旧版的 config 导入，直接在内部接管 V7.1 新宪法
 
 class JSONEnforcer:
     """
     大模型输出执法者：负责提取思维链(CoT)、清洗废话、校验格式、触发熔断
     """
     def __init__(self):
-        # 挂载前端定好的宪法 (Schema)
-        self.schema = AISchemaRegistry.TALENT_EVALUATION_SCHEMA
+        # 🚀 V7.1 架构升级：废弃外部遗留的 V6 宪法，直接在此定义 V7.1 的 JSON 锁死大闸！
+        self.schema = {
+            "type": "object",
+            "properties": {
+                "candidate_id": {"type": "string"},
+                "capability_score": {"type": "number"},
+                "stability_score": {"type": "number"},
+                "talent_alpha": {"type": "number"},
+                "is_high_risk": {"type": "boolean"},
+                "risk_tags": {"type": "array", "items": {"type": "string"}},
+                "strategic_advice": {"type": "string"},
+                "claim_modeling": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "skill_claim": {"type": "string"},
+                            "evidence_span": {"type": "string"},
+                            "evidence_strength": {"type": "string"},
+                            "verification_status": {"type": "string"}
+                        }
+                    }
+                },
+                "interview_probes": {"type": "array", "items": {"type": "string"}}
+            },
+            # 明确规定哪些字段是系统流水线绝对不可或缺的
+            "required": ["candidate_id", "talent_alpha", "strategic_advice", "claim_modeling", "interview_probes"]
+        }
 
     def clean_llm_noise(self, raw_output):
         """
@@ -58,19 +84,19 @@ class JSONEnforcer:
                 validate(instance=parsed_json, schema=self.schema)
                 
                 # 如果顺利走到这里，说明是纯净的黄金数据！
-                print("✅ [落锁成功] 真实评估分数已剥离并经过 Schema 验证。")
                 return parsed_json
                 
             except (json.JSONDecodeError, ValidationError) as e:
                 attempt += 1
                 # 终端强制爆红预警
                 print(f"⚠️ [熔断警报] 第 {attempt} 次解析失败。原因: {str(e)[:50]}...")
-                print("🚨 报告指挥官，检测到噪声干扰，格式锁死引擎已启动自动修复！")
                 
                 # 达到最大重试次数后直接返回兜底数据
                 if attempt == max_retries:
                     print("❌ 修复上限耗尽。强制启动防崩溃兜底预案！")
                     return self._generate_fallback_json()
+                
+                print("🚨 报告指挥官，检测到噪声干扰，格式锁死引擎已启动自动修复！")
 
     def _generate_fallback_json(self):
         """防止后端彻底宕机的兜底数据 (Fallback)"""
@@ -82,11 +108,14 @@ class JSONEnforcer:
             "is_high_risk": True,
             "risk_tags": ["FORMAT_CORRUPTION", "LLM_HALLUCINATION"],
             "strategic_advice": "数据解析严重崩溃，此候选人档案已隔离，需人工介入。",
-            # 🚀 新增：即使崩溃，也要输出合规的证据矩阵兜底结构
-            "evidence_matrix": {
-                "core_claim": "系统解析崩溃",
-                "supporting_evidence": ["无有效数据"],
-                "missing_evidence": ["数据流中断"],
-                "consistency_score": "Low"
-            }
+            # 🚀 替换为 V7.1 的主张建模兜底结构，完美匹配新宪法
+            "claim_modeling": [
+                {
+                    "skill_claim": "系统解析崩溃",
+                    "evidence_span": "无有效数据",
+                    "evidence_strength": "None",
+                    "verification_status": "INSUFFICIENT_EVIDENCE"
+                }
+            ],
+            "interview_probes": ["系统数据流中断，请全量人工面测"]
         }

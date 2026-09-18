@@ -2,67 +2,86 @@ import os
 import json
 import hashlib
 import time
+import re
+from openai import OpenAI, RateLimitError, APIConnectionError, APITimeoutError
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from src.utils.logger import SYSTEM_LOGGER
 
 # ==========================================
-# 🧠 V6.0 LLM 战略裁决大脑 (带精确指纹缓存层)
+# 🧠 V7.1 2-Pass Hybrid 战略大脑 (物理分层 + Python拦截网)
 # ==========================================
 
-# 👑 【高管面试展示区】这是系统真实运作时挂载的 System Prompt (提示词工程)
-SYSTEM_PROMPT = """
-你现在是顶尖科技公司的CTO。任务是对候选人项目进行评估，输出严格的JSON格式。
-【最高纲领：反虚假繁荣与诚实溢价】
+# ----------------- PASS 1：绝对中立的事实提取器 -----------------
+PASS1_PROMPT = """
+你现在是绝对中立的【事实提取器 (Data Extractor)】。
+你的唯一任务是：从输入文本中提取候选人的核心技术主张，并找出支撑该主张的原文。
+【纪律要求】：
+1. 严禁进行任何评价、打分或真伪判断。
+2. `evidence_span` 必须 100% 逐字复制原文。如果找不到直接对应的原话，必须填 "None"。
 
-1. 寻找肌肉记忆（击杀PPT战神）：
-   无视“0到1、赋能、商业闭环”等宏大叙事。强制向下寻找脏活累活。若无“修复、重构、配置、优化、排障”等具体动词，直接判定为虚假繁荣。
+严格输出以下 JSON：
+{
+    "extracted_claims": [
+        {
+            "claim_id": "C01",
+            "skill_claim": "候选人的技术或业务主张",
+            "evidence_span": "必须是原文中的原话子串，找不到填 None"
+        }
+    ]
+}
+"""
 
-2. 严密计算“吹牛杠杆率” (Bullshit Leverage Ratio)：
-   在后台执行计算：商业黑话频次 ÷ 真实技术动词频次。
-   - 若比值 > 2（黑话极多，动词极少），设为 "High"。
-   - 若比值 < 1（全是干活细节，没有废话），设为 "Low"。
+# ----------------- PASS 2：毫不留情的对抗审判官 -----------------
+PASS2_PROMPT = """
+你现在是顶尖科技公司的【CTO与对抗性审查官 (Adversarial Verifier)】。
+你将收到一份候选人的简历原文，以及一份【经过系统严格校验的客观主张清单】。
+请基于这些铁证，进行冷酷的抗欺诈审查，并输出 JSON。
 
-3. 赋予诚实溢价（保护真正的螺丝钉）：
-   若候选人只负责局部底层模块，没有吹嘘主导全局，且逻辑自洽，判定为 true。
+【最高纲领】
+1. 严密计算“Claim-to-Evidence Ratio (主张实证倒挂率)”：商业黑话频次 ÷ 真实技术动词频次。(>2为High, <1为Low)。
+2. 【四态无罪推论】：对每个主张进行状态判定。
+   - SUPPORTED: 主张与证据完美闭环。
+   - PARTIALLY_SUPPORTED: 缺乏深度细节。
+   - CONTRADICTED: 时间线、逻辑错乱或被系统标记为造假。
+   - INSUFFICIENT_EVIDENCE: 只有主张，证据为 None。
+3. 🚨【探针多样性与反作弊 (Anti-Gaming)】：
+   针对 INSUFFICIENT_EVIDENCE 的主张，必须生成刀刀见血的追问。严禁生成“你是怎么做的”这种废话。
+   你必须从以下【问题族】中，随机抽取 1-2 个维度生成具体拷问：
+   - [Baseline / 基线]: 追问优化前的数据、基准线。（例如：降低40%成本，原先的基数是多少？）
+   - [Ownership / 归属]: 剥离团队包装，追问具体手写量。（例如：哪一行核心代码是你亲自提交的？）
+   - [Failure / 失败边界]: 拷问方案的阴暗面。（例如：上线后引发过什么副作用或 OOM 故障？）
+   - [Trade-off / 权衡]: 极限施压。（例如：如果流量瞬间暴增 3 倍，最先崩溃的是哪个组件？）
+   - [Counterfactual / 反事实]: 考验技术视野。（例如：如果不修改当前的中间件，还有什么替代方案？）
 
-4.【最高评估法则：证据权重 (Evidence-Based Evaluation)】
-绝对不要仅仅因为候选人使用了“千万级、主导、赋能、AI 架构”等宏大词汇（Claim）就给予高分。你必须执行严格的**【主张-证据一致性校验】**：
-    1. 提取核心主张 (Claim)：找出他最引以为傲的业绩。
-    2. 搜寻底层证据 (Evidence)： 不要看他的态度是否谦虚，必须去寻找“灵魂 7 问”的答案：
-         2.1写了什么具体模块？
-         2.2改了哪段核心逻辑？
-         2.3代码部署在哪里？
-         2.4业务上下游谁在使用？
-         2.5出现过什么线上事故（如 OOM、死锁）？
-         2.6如何定位排障的？
-         2.7哪个具体的量化指标得到了改善?
-    3. 计算自洽度 (Consistency)：只有当候选人的核心主张（Claim）能与上述细节（Evidence）完美吻合，且作用边界（Scope）清晰时，才可将 consistency_score 评定为 High。仅表现出“谦虚”但缺乏上述技术细节，最多评为 Medium。
-    4. 对这种“脱实向虚”的简历，实施残酷的降维打击。
-
-必须输出JSON结构：
+严格按照以下 JSON 输出格式返回：
 {
     "bullshit_ratio": "Low/Medium/High",
     "integrity_tag": true/false,
     "strategic_advice": "20字以内的极度冷酷/赞赏短评",
-    "evidence_matrix": {
-        "core_claim": "最核心的主张",
-        "supporting_evidence": ["证据1", "证据2"],
-        "missing_evidence": ["缺失证据1"],
-        "consistency_score": "High/Medium/Low"
-    }
+    "claim_verdicts": [
+        {
+            "claim_id": "对应输入的C01等编号",
+            "evidence_strength": "Strong/Weak/None",
+            "verification_status": "SUPPORTED / PARTIALLY_SUPPORTED / CONTRADICTED / INSUFFICIENT_EVIDENCE"
+        }
+    ],
+    "interview_probes": [
+        "[Ownership] 你提到重构了核心交易链路，具体是哪个核心类的锁机制是你亲自手写的？",
+        "[Failure] 缓存优化上线后的第一个月，出现过最严重的缓存击穿故障是什么？"
+    ]
 }
 """
 
 class LLMEvaluator:
     """
-    V6.0 终极大脑：带精确指纹缓存的 LLM 质证引擎
+    V7.1 终极大脑：2-Pass Hybrid 架构 + Python 中间件校验
     """
     def __init__(self, cache_dir="data/04_cache"):
         self.cache_dir = cache_dir
         self.cache_file = os.path.join(cache_dir, "llm_evidence_cache.json")
         self.cache_db = self._load_cache()
-        
-        # ⚠️ 这里是你未来填入 DeepSeek API Key 的地方
-        self.api_key = "sk-your-deepseek-api-key-here"
+        # ⚠️ 这里填入你的真实 API Key
+        self.api_key = "sk-7c4f7e909f8d4e069be2c2a5efcf6efd"
 
     def _load_cache(self):
         if not os.path.exists(self.cache_dir):
@@ -77,140 +96,208 @@ class LLMEvaluator:
 
     def _save_cache(self):
         with open(self.cache_file, "w", encoding="utf-8") as f:
-            json.dump(self.cache_db, f, ensure_ascii=False, indent=4)
+            json.dump(self.cache_db, f, ensure_ascii=False, indent=2)
 
-    # 🚀 新老融合点 1：将证据图谱(evidence_graph)一起卷入 MD5 哈希计算！
-    def _generate_fingerprint(self, text, evidence_graph="{}"):
-        if not text:
-            text = "empty_text_fingerprint"
-        
-        # 将项目描述和前置规则引擎收集的证据合体，确保哈希的绝对唯一性
-        combined_context = f"TEXT:{text} | EVIDENCE:{evidence_graph}"
-        normalized_text = combined_context.strip().lower()
-        
-        return hashlib.md5(normalized_text.encode('utf-8')).hexdigest()
+    # ==========================================
+    # 🧬 算法层：SimHash (64-bit) 与 Jaccard 计算
+    # ==========================================
+    @staticmethod
+    def _compute_simhash(text: str) -> int:
+        """为文本生成 64 位 SimHash 局部敏感哈希指纹"""
+        if not text: return 0
+        tokens = re.findall(r'[\w]+', text.lower())
+        if not tokens: return 0 
+        v = [0] * 64
+        for token in tokens:
+            token_hash = int(hashlib.md5(token.encode('utf-8')).hexdigest()[:16], 16)
+            for i in range(64):
+                bit = (token_hash >> i) & 1
+                v[i] += 1 if bit else -1
+        fingerprint = 0
+        for i in range(64):
+            if v[i] > 0:
+                fingerprint |= (1 << i)
+        return fingerprint
 
-    # 🚀 新老融合点 2：接收 pipeline 传来的第二个参数 (evidence_graph)
-    def evaluate_project(self, project_desc: str, evidence_graph: str = "{}") -> dict:
-        """主入口：先查缓存，没有再调取核心引擎"""
-        fingerprint = self._generate_fingerprint(project_desc, evidence_graph)
-        
-        if fingerprint in self.cache_db:
-            SYSTEM_LOGGER.info(f"⚡ [LLM Cache 命中] 提取历史指纹 {fingerprint[:8]}... 耗时: 0ms (免流)")
-            return self.cache_db[fingerprint]
+    @staticmethod
+    def _hamming_distance(h1: int, h2: int) -> int:
+        """计算两个 64 位哈希值的汉明距离"""
+        return bin(h1 ^ h2).count('1')
 
-        SYSTEM_LOGGER.info(f"🌐 [LLM Cache 未命中] 呼叫大脑进行逻辑质证...")
-        start_time = time.time()
+    @staticmethod
+    def _jaccard_similarity(text_a: str, text_b: str) -> float:
+        """二次确认：计算 Token 级 Jaccard 相似度"""
+        set_a = set(re.findall(r'[\w]+', text_a.lower()))
+        set_b = set(re.findall(r'[\w]+', text_b.lower()))
+        if not set_a or not set_b: return 0.0
+        intersection = len(set_a & set_b)
+        union = len(set_a | set_b)
+        return intersection / union if union > 0 else 0.0
 
-        # 呼叫底层逻辑 (传入文本与前置证据)
-        result = self._call_deepseek_api(project_desc, evidence_graph)
-        
-        end_time = time.time()
-        SYSTEM_LOGGER.info(f"✅ [大脑响应成功] 耗时: {end_time - start_time:.2f}s")
-
-        self.cache_db[fingerprint] = result
-        self._save_cache()
-        return result
-
-    # 🚀 新老融合点 3：底层 API 接口签名同步，内部完全保留你牛逼的 Mock 逻辑
-    def _call_deepseek_api(self, project_desc: str, evidence_graph: str = "{}") -> dict:
-        """
-        [V6.0 离线压测挡板 / Mock Mode] 
-        原封不动保留的历史逻辑。在接入真实 API 前保障系统不雪崩的物理防线。
-        """
-        # 模拟网络调用延迟
-        time.sleep(0.5)
-        
-        if not project_desc or len(project_desc) < 10:
-            return {
-                "bullshit_ratio": "N/A", 
-                "integrity_tag": False, 
-                "strategic_advice": "信息缺失，无法评估",
-                "evidence_matrix": {
-                    "core_claim": "无有效文本",
-                    "supporting_evidence": [],
-                    "missing_evidence": ["简历内容过短"],
-                    "consistency_score": "Low"
-                }
-            }
+    # ==========================================
+    # 🚀 断路器与指数退避装甲 
+    # ==========================================
+    @retry(
+        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
+        wait=wait_exponential(multiplier=2, min=2, max=32),
+        stop=stop_after_attempt(3), 
+        reraise=True 
+    )
+    def _invoke_llm_with_retry(self, client, messages):
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            response_format={"type": "json_object"},
+            temperature=0.0
+        )
+        # 🛡️ 强化版 JSON 剥离装甲
+        res = response.choices[0].message.content.strip() # 第一步：先干掉前后的空白和换行！
+        if res.startswith("```json"): 
+            res = res[7:]
+        elif res.startswith("```"): # 兼容模型偶尔只写 ``` 而不写 json 的情况
+            res = res[3:]
             
+        res = res.strip() # 剥离头部后，再清一次内部可能的换行
+        
+        if res.endswith("```"): 
+            res = res[:-3]
+            
+        return json.loads(res.strip())
+
+    # ==========================================
+    # 🛡️ 继承旧版的物理降级与兜底保护机制
+    # ==========================================
+    def _fallback_evaluation(self, project_desc: str, error_msg: str) -> dict:
+        SYSTEM_LOGGER.error(f"❌ 真实神经中枢连接断裂或跳闸: {error_msg}")
         try:
-            # 🚨 触发 PPT战神 拦截逻辑
             if "赋能" in project_desc or "闭环" in project_desc or "0到1" in project_desc:
                 return {
                     "bullshit_ratio": "High", 
                     "integrity_tag": False, 
                     "strategic_advice": "满纸黑话无排障细节，建议直接淘汰",
-                    "evidence_matrix": {
-                        "core_claim": "从0到1实现全链路商业闭环与生态赋能",
-                        "supporting_evidence": ["无底层代码痕迹"],
-                        "missing_evidence": ["具体的架构图", "QPS压测数据", "任何一行真实的排障代码"],
-                        "consistency_score": "Low"
-                    }
+                    "claim_modeling": [],
+                    "interview_probes": ["系统熔断降级，建议重点追问底层实现细节"]
                 }
-                
-            # 🛡️ 触发 诚实螺丝钉 护航逻辑
-            elif "内存泄漏" in project_desc or "300行" in project_desc or "OOM" in project_desc:
-                return {
-                    "bullshit_ratio": "Low", 
-                    "integrity_tag": True, 
-                    "strategic_advice": "诚实的局部破局者，逻辑自洽，立刻面试",
-                    "evidence_matrix": {
-                        "core_claim": "排查并修复内存泄漏问题，重构底层逻辑",
-                        "supporting_evidence": ["明确指出了 OOM/内存泄漏", "界定了具体的工作量边界"],
-                        "missing_evidence": ["无"],
-                        "consistency_score": "High"
-                    }
-                }
-
-            # 🚀 极简扫地僧护航 (字数少，但全是核心痛点)
             elif len(project_desc) < 50 and any(k in project_desc for k in ["重构", "OOM", "P99", "底层", "死锁"]):
                 return {
                     "bullshit_ratio": "Low", 
                     "integrity_tag": True, 
-                    "strategic_advice": "字少事大！极简扫地僧，命中核心痛点，务必面谈！",
-                    "evidence_matrix": {
-                        "core_claim": "高度浓缩的底层排障或架构重构",
-                        "supporting_evidence": ["文本极短但直接命中核心复杂场景 (如 P99/OOM)"],
-                        "missing_evidence": ["无废话"],
-                        "consistency_score": "High"  
-                    }
+                    "strategic_advice": "字少事大！极简扫地僧，务必面谈！",
+                    "claim_modeling": [],
+                    "interview_probes": ["系统熔断降级，命中硬核底盘词汇，直接技术面实测"]
                 }
-     
-            # 🟡 常规平庸简历
             else:
                 return {
                     "bullshit_ratio": "Medium", 
                     "integrity_tag": False, 
-                    "strategic_advice": "平庸的业务执行者，缺乏亮点",
-                    "evidence_matrix": {
-                        "core_claim": "按时完成业务需求开发",
-                        "supporting_evidence": ["参与了常规模块编写"],
-                        "missing_evidence": ["缺乏深度调优细节", "没有高可用架构经验"],
-                        "consistency_score": "Medium"
-                    }
+                    "strategic_advice": "平庸业务执行者或系统降级无法深入扫描",
+                    "claim_modeling": [],
+                    "interview_probes": ["需人工复核"]
                 }
-               
-        except Exception as e:
-            SYSTEM_LOGGER.error(f"❌ 神经中枢连接断裂: {str(e)}")
+        except:
             return {
                 "bullshit_ratio": "ERROR", 
                 "integrity_tag": False, 
-                "strategic_advice": "LLM 引擎熔断",
-                "evidence_matrix": {
-                    "core_claim": "系统解析崩溃",
-                    "supporting_evidence": ["无有效数据"],
-                    "missing_evidence": ["数据流中断"],
-                    "consistency_score": "Low"
-                }
+                "strategic_advice": "系统彻底熔断",
+                "claim_modeling": [],
+                "interview_probes": ["数据流中断"]
             }
 
-# ==========================================
-# 🔌 向后兼容接口 (Backward Compatibility)
-# ==========================================
-# 实例化全局评估引擎，确保 pipeline.py 调用此文件时不会报错
-_evaluator_instance = LLMEvaluator()
+    # ==========================================
+    # 👑 核心：2-Pass 业务编排与 Python 拦截网
+    # ==========================================
+    def _run_2pass_pipeline(self, project_desc: str, evidence_graph: str) -> dict:
+        client = OpenAI(api_key=self.api_key, base_url="https://api.deepseek.com/v1")
+        
+        # ----------- PASS 1: 提取事实 -----------
+        msg_pass1 = [
+            {"role": "system", "content": PASS1_PROMPT},
+            {"role": "user", "content": f"<EVIDENCE_SOURCE>\n{project_desc}\n</EVIDENCE_SOURCE>"}
+        ]
+        SYSTEM_LOGGER.info("    ├─ [Pass 1] 启动中立事实提取...")
+        pass1_res = self._invoke_llm_with_retry(client, msg_pass1)
+        
+        # ----------- MIDDLEWARE: Python 物理校验拦截幻觉 -----------
+        validated_claims = []
+        for claim in pass1_res.get("extracted_claims", []):
+            span = claim.get("evidence_span", "None")
+            # 🚨 核心风控：如果模型说有证据，但在原文找不到，直接处决该证据！
+            if span != "None" and span not in project_desc:
+                SYSTEM_LOGGER.warning(f"    │  ⚠️ 捕获模型幻觉！捏造证据: '{span}' (已物理清空)")
+                claim["evidence_span"] = "None" 
+                claim["system_flag"] = "HALLUCINATION_DETECTED"
+            validated_claims.append(claim)
+            
+        # ----------- PASS 2: 对抗性质证 -----------
+        msg_pass2 = [
+            {"role": "system", "content": PASS2_PROMPT},
+            {"role": "user", "content": f"<VALIDATED_CLAIMS>\n{json.dumps(validated_claims, ensure_ascii=False)}\n</VALIDATED_CLAIMS>\n<ORIGINAL_TEXT>\n{project_desc}\n</ORIGINAL_TEXT>"}
+        ]
+        SYSTEM_LOGGER.info("    ├─ [Pass 2] 启动对抗性审判...")
+        pass2_res = self._invoke_llm_with_retry(client, msg_pass2)
+        
+        # ----------- ADAPTER: 组装输出，对齐 V7.0 Pipeline 契约 -----------
+        # 巧妙地将 Pass 1 的 claim 事实和 Pass 2 的 verdict 判决合并，生成 pipeline.py 需要的 claim_modeling 结构
+        final_claim_modeling = []
+        verdicts_map = {v.get("claim_id"): v for v in pass2_res.get("claim_verdicts", [])}
+        
+        for claim in validated_claims:
+            c_id = claim.get("claim_id")
+            verdict = verdicts_map.get(c_id, {})
+            final_claim_modeling.append({
+                "skill_claim": claim.get("skill_claim"),
+                "evidence_span": claim.get("evidence_span"),
+                "evidence_strength": verdict.get("evidence_strength", "None"),
+                "verification_status": verdict.get("verification_status", "INSUFFICIENT_EVIDENCE")
+            })
+            
+        return {
+            "bullshit_ratio": pass2_res.get("bullshit_ratio", "Medium"),
+            "integrity_tag": pass2_res.get("integrity_tag", False),
+            "strategic_advice": pass2_res.get("strategic_advice", "无建议"),
+            "claim_modeling": final_claim_modeling,
+            "interview_probes": pass2_res.get("interview_probes", [])
+        }
 
-def deepseek_strategic_scan(project_desc: str, evidence_graph: str = "{}") -> dict:
-    """供外部 pipeline 调用的统一接口，自动经过缓存层路由"""
-    return _evaluator_instance.evaluate_project(project_desc, evidence_graph)
+
+    # ==========================================
+    # 🛡️ 主入口与三级缓存漏斗
+    # ==========================================
+    def evaluate_project(self, project_desc: str, evidence_graph: str = "{}") -> dict:
+        """
+        三级缓存穿透漏斗：MD5 -> SimHash -> 真实 API 调用
+        """
+        combined_context = f"TEXT:{project_desc.strip()} | EVIDENCE:{evidence_graph.strip()}"
+        exact_hash = hashlib.md5(combined_context.encode('utf-8')).hexdigest()
+        
+        # 🚀 [Tier 1]: 精确匹配 (Canonical Exact Cache，MD5)
+        if exact_hash in self.cache_db:
+            SYSTEM_LOGGER.info(f"⚡ [L1 Exact Cache 命中] MD5: {exact_hash[:8]}... 0ms 免流返回")
+            return self.cache_db[exact_hash]["result"]
+
+        # 🚀 [Tier 2]: 模糊匹配 (Near-Duplicate SimHash Cache)
+        current_simhash = self._compute_simhash(project_desc)
+        for cached_hash, cache_entry in self.cache_db.items():
+            if cache_entry.get("simhash", 0) == 0: continue
+            if self._hamming_distance(current_simhash, cache_entry["simhash"]) <= 3:
+                if self._jaccard_similarity(project_desc, cache_entry.get("source_text", "")) >= 0.85:
+                    SYSTEM_LOGGER.info(f"🎯 [L2 SimHash 近似命中] 成功免流！")
+                    self.cache_db[exact_hash] = {"simhash": current_simhash, "source_text": project_desc, "result": cache_entry["result"]}
+                    self._save_cache()
+                    return cache_entry["result"]
+
+        # 🚀 [Tier 3]: 真实调用并注册索引
+        SYSTEM_LOGGER.info(f"🌐 [Cache 全未命中] 启动 V7.1 2-Pass 双轨验证机制...")
+        start_time = time.time()
+        
+        try:
+            result = self._run_2pass_pipeline(project_desc, evidence_graph)
+        except Exception as e:
+            # 🚀 发生崩溃时，完美衔接旧代码的物理降级逻辑
+            result = self._fallback_evaluation(project_desc, str(e))
+
+        SYSTEM_LOGGER.info(f"✅ [2-Pass 验证完成] 耗时: {time.time() - start_time:.2f}s")
+
+        self.cache_db[exact_hash] = {"simhash": current_simhash, "source_text": project_desc, "result": result}
+        self._save_cache()
+        return result

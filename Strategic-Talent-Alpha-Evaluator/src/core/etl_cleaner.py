@@ -37,7 +37,7 @@ class ETLCleaner:
     def extract_proof_of_work(self, text):
         """
         核心探针：扫描代码主权锚点 (Proof of Work)
-        防 PPT 战神的第一道防线
+        防 Over-Packaged Claimant (过度包装型主张者)的第一道防线
         """
         text = str(text)
         for pattern in settings.POW_PATTERNS:

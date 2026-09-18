@@ -4,7 +4,7 @@ from config import settings
 
 class StabilityScoringEngine:
     """
-    Phase 1: 稳定性风控与红黄牌大闸 (V4.0 扣分制)
+    Phase 1: 稳定性风控与红黄牌大闸 (V7.1 扣分制)
     目标：防守下限。基于时间轴与风险探针，执行连续扣分，并导出三库分流标签。
     """
     
@@ -76,7 +76,7 @@ class StabilityScoringEngine:
         if score >= 80:
             flag = 'GREEN'
             is_risk = False
-            audit = "[✅ 黄金大盘] 稳定性健康" if not logs else f"[✅ 黄金大盘] {'; '.join(logs)}"
+            audit = "[✅ High-Priority Talent Pool (绿池)] 稳定性健康" if not logs else f"[✅ High-Priority Talent Pool (绿池)] {'; '.join(logs)}"
         elif score >= 30:
             flag = 'YELLOW'
             is_risk = True  # 触发高风险警报，供前端或 HR 系统标红
@@ -93,7 +93,7 @@ class StabilityScoringEngine:
         """
         批量接管数据流，执行打分并生成分流统计
         """
-        print("\n[STAGE 1] 启动 V4.0 稳定性风控大闸 (扣分制红线引擎)...")
+        print("\n[STAGE 1] 启动 V7.1 稳定性风控大闸 (扣分制红线引擎)...")
         
         # 极速向量化运算：对全盘数据应用扣分算子
         results = df.apply(StabilityScoringEngine.evaluate_stability, axis=1)
@@ -108,8 +108,8 @@ class StabilityScoringEngine:
         red_count = (df['triage_flag'] == 'RED').sum()
         
         print(f"📊 稳定性风控探针扫描完毕：")
-        print(f"  => 🟢 黄金无风险 (80-100分): {green_count} 份")
-        print(f"  => 🟡 高危但带病晋级 (30-79分): {yellow_count} 份")
-        print(f"  => 🔴 纯血雇佣兵熔断绞杀 (0-29分): {red_count} 份 (一票否决，不分配后续算力)")
+        print(f"  => 🟢 Tier-1 Stable Baseline (优质稳定基线) (80-100分): {green_count} 份")
+        print(f"  => 🟡 Conditional Advance with Risk Flags (风险预警) (30-79分): {yellow_count} 份")
+        print(f"  => 🔴 High-Churn Risk Interception (高频流失风险熔断) (0-29分): {red_count} 份 (一票否决，不分配后续算力)")
         
         return df

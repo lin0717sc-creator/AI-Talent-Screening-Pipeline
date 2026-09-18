@@ -1,9 +1,21 @@
+# --- Core Data Pipeline ---
 pandas>=2.0.0
-pydantic>=2.4.0
-tqdm>=4.65.0
-requests>=2.31.0
-scikit-learn>=1.2.0
 numpy>=1.24.0
+
+# --- LLM & Network ---
+openai>=1.0.0
+requests>=2.31.0
+
+# --- Data Validation & Resilience ---
+pydantic>=2.4.0
+jsonschema>=4.19.0
+
+# --- Security & Config ---
+python-dotenv>=1.0.0
+
+# --- Dashboard & UI ---
 streamlit>=1.28.0
 plotly>=5.17.0
-openai>=1.0.0
+
+# --- Concurrency & Telemetry ---
+tqdm>=4.65.0

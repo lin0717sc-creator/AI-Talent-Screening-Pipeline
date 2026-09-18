@@ -5,7 +5,7 @@ from config import settings
 
 class CapabilityScoringEngine:
     """
-    Phase 2 & 3: 核心能力加分与双底线熔断算子 (V6.0 证据层架构版)
+    Phase 2 & 3: 核心能力加分与双底线熔断算子 (V7.1 证据层架构版)
     目标：计算技术与项目得分，抽取密度先验信号，输出置信度与证据图谱。
     """
 
@@ -109,7 +109,7 @@ class CapabilityScoringEngine:
                 return pd.Series([0.0, 0.0, 0.0, 0.0, 'RED', True, new_audit, resume_density, confidence_score, json.dumps(evidence_graph, ensure_ascii=False)])
 
         # ==========================================
-        # ⚖️ 步骤二：单底线熔断与灰度放行 (老代码无损保留)
+        # ⚖️ 步骤二：单底线熔断与放行 (老代码无损保留)
         # ==========================================   
         tech_weights = sorted([settings.TECH_SKILL_WEIGHTS.get(skill, 0) for skill in found_tech_skills], reverse=True)
         project_weights = sorted([settings.PROJECT_OUTPUT_WEIGHTS.get(tag, 0) for tag in found_project_tags], reverse=True)
@@ -170,7 +170,7 @@ class CapabilityScoringEngine:
         """
         接管数据流，执行价值评估，过滤淘汰者
         """
-        print("\n[STAGE 2] 启动 V6.0 能力防刷分大闸 (Top 5 战力核算)...")
+        print("\n[STAGE 2] 启动 V7.1 能力防刷分大闸 (Top 5 战力核算)...")
         
         # 极速向量化运算：全盘扫描
         results = df.apply(CapabilityScoringEngine.evaluate_capability, axis=1)
@@ -194,8 +194,8 @@ class CapabilityScoringEngine:
         nerds = df[(df['triage_flag'] == 'RED') & (df['Project_Score'] == 0) & (df['Stability_Score'] > 0)]
 
         print(f"📊 核心能力估值扫描完毕：")
-        print(f"  => ⚔️ 击杀 PPT 战神 (技术底线熔断): {len(bluffers)} 份")
-        print(f"  => ⚔️ 击杀 呆板码农 (商业底线熔断): {len(nerds)} 份")
-        print(f"  => 🏆 成功穿越双底线幸存者: {len(survivors)} 份 (已赋予身价总分，准备进行业务权重变形)")
+        print(f"  => ⚔️ 击杀 Over-Packaged Claimant (过度包装型主张者) (技术底线熔断): {len(bluffers)} 份")
+        print(f"  => ⚔️ 击杀 Task-Bound Executor (纯任务型执行者) (商业底线熔断): {len(nerds)} 份")
+        print(f"  => 🏆 幸存者: {len(survivors)} 份 (已赋予身价总分，准备进行业务权重变形)")
         
         return df

@@ -9,7 +9,7 @@ PREDICTED_SCORE_FILE = os.path.join(BASE_DIR, "data", "03_processed", "cleaned_v
 GROUND_TRUTH_FILE = os.path.join(BASE_DIR, "data", "historical_labels.csv")
 
 def run_evaluation():
-    print("\n[EVAL STAGE] 启动 V6.0 模型效度回测引擎 (Backtesting)...")
+    print("\n[EVAL STAGE] 启动 V7.1 模型效度回测引擎 (Backtesting)...")
     
     # 2. 读取数据
     try:

@@ -232,7 +232,7 @@ MERGE_WORDS = r'(?i)\b(acquired|merged|internal transfer|promoted|内部调动|�
 GIG_WORDS = r'(?i)\b(contract|freelance|consultant|vendor|outsourcing|外包|顾问|独立开发者)\b'
 FOUNDER_WORDS = r'(?i)\b(founder|co-founder|entrepreneur|ceo|创始人|联合创始人)\b'
 
-# 3. 宏观经济/裁员受害者特征（用于 Phase 3-A 捡漏池截留）
+# 3. 宏观经济/裁员受害者特征（用于 Phase 3-A Secondary Verification Pool (黄池)截留）
 LAYOFF_WORDS = r'(?i)\b(layoff|retrenchment|redundancy|restructure|company closed|downsizing|裁员|业务裁撤|公司倒闭)\b'
 
 # 稳定性阈值定义 (Hyperparameters)
@@ -255,7 +255,7 @@ POW_PATTERNS = [
 ]
 
 # ==============================================================================
-# ⚙️ 9. 业务场景动态权重矩阵 (Talent Alpha) - 升级为 V6.0 动态阈值路由 (Precision vs Recall)
+# ⚙️ 9. 业务场景动态权重矩阵 (Talent Alpha) - 升级为 V7.1 动态阈值路由 (Precision vs Recall)
 # ==============================================================================
 TALENT_WEIGHT_PROFILES = {
     "PIONEER_TEAM": {

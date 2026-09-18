@@ -8,13 +8,13 @@ from src.core.etl_cleaner import ETLCleaner
 from src.core.stability import StabilityScoringEngine
 from src.core.capability import CapabilityScoringEngine
 from src.core.json_validator import JSONEnforcer  # 🆕 降维打击外挂 2：引入 JSON 锁死大闸
-from src.core.llm_evaluator import deepseek_strategic_scan  # 🚀 V6.0 引入 LLM 大脑
 from src.utils.logger import SYSTEM_LOGGER  # 🚀 V5.0 全局工业雷达
-
+# 👑 引入 V7.0 生化洗消舱
+from src.core.canonicalizer import ResumeCanonicalizer
 
 class MasterDataPipeline:
     """
-    V6.0 全局打分与风控漏斗 (总控大脑 - 挂载 LLM 反虚假繁荣引擎)
+    V7.1 全局打分与风控漏斗 (总控大脑 - 挂载 LLM 反虚假繁荣引擎)
     """
     def __init__(self):
         self.output_green = settings.STORAGE_REGISTRY['master_output_csv']
@@ -64,7 +64,7 @@ class MasterDataPipeline:
         # Phase 4: 终端商业分发与排序
         self._route_and_sort_assets()
 
-        # 🚀 降维打击外挂注入：仅仅针对筛选出的“黄金大盘”进行 LLM 深度审判
+        # 🚀 降维打击外挂注入：仅仅针对筛选出的“High-Priority Talent Pool (绿池)”进行 LLM 深度审判
         self._run_llm_deep_scan()
 
         # 物理落盘封存
@@ -117,7 +117,8 @@ class MasterDataPipeline:
                         # 绝不盲目给 1.2，如果是纯 Fork 刷星 (pow_signal极低)，溢价近乎为 0！
                         dynamic_premium = pow_signal * 0.15 
                         alpha *= (1.0 + dynamic_premium)
-                        SYSTEM_LOGGER.info(f"  🔗 提取动态开源信号 (PoW): {dynamic_premium:.2%} 溢价")
+                        # 🚨 修复：注释掉这行高频刷屏日志，或将其删除！
+                        # SYSTEM_LOGGER.info(f"  🔗 提取动态开源信号 (PoW): {dynamic_premium:.2%} 溢价")
                 
                 alpha = round(alpha, 2)
                 
@@ -131,13 +132,17 @@ class MasterDataPipeline:
                     "is_high_risk": True if row.get('triage_flag') == 'RED' else False,
                     "risk_tags": ["Logical_Inconsistency"] if row.get('triage_flag') == 'RED' else [],
                     "strategic_advice": "核心战神，立刻安排面试！" if alpha > 75 else ("一票否决" if row.get('triage_flag') == 'RED' else "常规储备池"),
-                    # 🚀 降维打击外挂 4：植入全局兜底证据矩阵，满足宪法 Schema 的绝对审查！
-                    "evidence_matrix": {
-                        "core_claim": "基于规则引擎计算出的综合能力指标",
-                        "supporting_evidence": [f"计算出基础能力分: {capability}", f"计算出稳定性指标: {stability}"],
-                        "missing_evidence": ["需等待 LLM 深度精读"],
-                        "consistency_score": "Medium"
-                    }
+                    
+                    # 🚀 替换为 V7.0 的主张建模兜底数据，骗过 JSON 大闸
+                    "claim_modeling": [
+                        {
+                            "skill_claim": "基于规则引擎的基础能力初筛",
+                            "evidence_span": f"计算出基础能力分: {capability}",
+                            "evidence_strength": "Weak", 
+                            "verification_status": "Insufficient"
+                        }
+                    ],
+                    "interview_probes": ["需等待 LLM 深度精读后生成最终追问清单"]
                 })
                 
                 # 强制通过 JSONEnforcer 执法清洗
@@ -155,7 +160,7 @@ class MasterDataPipeline:
         self.df[['Talent_Alpha', 'Strategic_Advice']] = self.df.progress_apply(_calculate_and_validate, axis=1)
 
     def _route_and_sort_assets(self):
-        SYSTEM_LOGGER.info("[STAGE 4] 启动终端商业分发与排序...")
+        SYSTEM_LOGGER.info("[STAGE 4] 启动终端商业分发与排序...") 
         self.df_green = self.df[self.df['triage_flag'] == 'GREEN'].copy()
         self.df_yellow = self.df[self.df['triage_flag'] == 'YELLOW'].copy()
         self.df_red = self.df[self.df['triage_flag'] == 'RED'].copy()
@@ -169,13 +174,13 @@ class MasterDataPipeline:
 
 
     # ==========================================
-    # 🚀 V6.0 新增外挂模块：LLM 大模型终极裁决
+    # 🚀 V7.1 新增外挂模块：LLM 大模型终极裁决
     # ==========================================
     def _run_llm_deep_scan(self):
         if self.df_green is None or self.df_green.empty:
             return
             
-        SYSTEM_LOGGER.info("[STAGE 4.5] 🧠 启动 DeepSeek 神经中枢，对黄金大盘(Top 50)进行降维精读...")
+        SYSTEM_LOGGER.info("[STAGE 4.5] 🧠 启动 DeepSeek 神经中枢，对High-Priority Talent Pool (绿池)(Top 50)进行降维精读...")
         
         # 截取前 50 名，好钢用在刀刃上，防止 API 账单爆炸
         top_50 = self.df_green.head(50).copy()
@@ -184,87 +189,213 @@ class MasterDataPipeline:
         if 'project_desc' not in top_50.columns:
             top_50['project_desc'] = "无详细项目描述"
 
+
         # ==========================================
-        # 🚀 衔接新代码：唤醒带有指纹缓存的 LLMEvaluator
+        # 🚀 衔接新代码：唤醒带有指纹缓存的 LLMEvaluator 与 洗消舱
         # ==========================================
         llm_engine = LLMEvaluator()
+        canonicalizer = ResumeCanonicalizer() # 👈 启动洗消舱
         
         def apply_llm_with_cache(row):
-            project_text = row.get('project_desc', '')
-            evidence = row.get('Evidence_Graph', '{}')
-            # 呼叫缓存引擎！（不仅传简历，还把第一层收集的结构化证据传进去）
-            return llm_engine.evaluate_project(project_text, evidence)
+            project_text = str(row.get('project_desc', ''))
+            evidence = str(row.get('Evidence_Graph', '{}'))
             
-        # 挂载 LLM (使用新的缓存引擎，不再用 apply 纯文本，而是 apply 整个 row)
+            # 1. 物理洗消：拦截并清理文本，提取出干净文本 (canonical_text) 和风险警告 (risk_flags)
+            clean_doc = canonicalizer.normalize(project_text)
+            
+            # 2. 呼叫缓存引擎！（必须传入洗干净的 canonical_text）
+            result = llm_engine.evaluate_project(clean_doc.canonical_text, evidence)
+            
+            # 3. 将洗消舱抓到的风险一起塞入结果中返回，方便后续落盘
+            result['risk_flags_text'] = ", ".join(clean_doc.risk_flags) if clean_doc.risk_flags else "安全"
+            return result
+            
+        # 挂载 LLM(使用新的缓存引擎，不再用 apply 纯文本，而是 apply 整个 row)
         llm_results = top_50.apply(apply_llm_with_cache, axis=1)
+
 
         # ==========================================
         # 👇 绝对不能丢的灵魂👇
         # ==========================================
-        top_50['吹牛杠杆率'] = llm_results.apply(lambda x: x.get('bullshit_ratio'))
-        top_50['诚实自洽护航'] = llm_results.apply(lambda x: x.get('integrity_tag'))
+        top_50['Claim-to-Evidence Ratio (主张实证倒挂率)'] = llm_results.apply(lambda x: x.get('bullshit_ratio'))
+        top_50['Logical Consistency Guardrail (逻辑自洽)'] = llm_results.apply(lambda x: x.get('integrity_tag'))
         top_50['LLM_高管点评'] = llm_results.apply(lambda x: x.get('strategic_advice'))
+        
+        # 🚀 修改这里：提取新的 CEL 主张建模数组
+        top_50['claim_modeling'] = llm_results.apply(lambda x: json.dumps(x.get('claim_modeling', []), ensure_ascii=False))
 
-        # 🚀 降维打击外挂 5：物理封存案件调查板证据
-        top_50['evidence_matrix'] = llm_results.apply(lambda x: json.dumps(x.get('evidence_matrix', {}), ensure_ascii=False))
+        # 👑 新增商业化大杀器：HR/CTO 面试追问清单 & 投毒风险 (这部分保持不变)
+        top_50['【HR/CTO 面试追问清单】'] = llm_results.apply(
+            lambda x: "\n".join(x.get('interview_probes', [])) if x.get('interview_probes', []) else "无追问建议"
+        )
 
-        SYSTEM_LOGGER.info("[STAGE 4.6] ⚖️ 启动大模型裁决执行官：执行打五折与护航溢价...")
-        def apply_llm_裁决(row):
-            final_score = row['Talent_Alpha']
+        top_50['Prompt Injection Risk (提示词注入预警)'] = llm_results.apply(lambda x: x.get('risk_flags_text'))
 
-            # 1. 斩杀 PPT 战神 (逻辑不变)
-            if row['吹牛杠杆率'] == 'High':
-                final_score *= 0.5  # 斩杀虚假繁荣
-                SYSTEM_LOGGER.warning(f"  🔪 击杀PPT战神: {row.get('email', '')}，分数腰斩！")
-                
-            # 2. 🚀 升级：基于证据矩阵的一致性溢价 (Consistency Premium)
+
+        SYSTEM_LOGGER.info("[STAGE 4.6 & 4.7] ⚖️ 启动最高法庭：执行三大指标物理分离与 2x2 风控路由...")
+        
+        def apply_decision_metrics(row):
+            # 基础分兜底
+            base_score = row.get('Talent_Alpha', 0.0)
+
+            #🚀 升级版四态 CEL (Claim-Evidence-Logic) 结算
             try:
-                evidence = json.loads(row.get('evidence_matrix', '{}'))
-                consistency = evidence.get('consistency_score', 'Medium')
+                # 解析大模型吐出的主张数组
+                claim_models = json.loads(row.get('claim_modeling', '[]'))
             except:
-                consistency = 'Medium'
+                claim_models = []
                 
-            # 如果主张与证据极度自洽 (High)，才给予 1.2 倍溢价
-            if consistency == 'High': 
-                final_score *= 1.2  
-                SYSTEM_LOGGER.info(f"  🛡️ 触发一致性溢价: {row.get('email', '')} 证据链完美闭环，获得1.2倍加成！")
+            # 统计全新的四种校验状态
+            total_claims = len(claim_models)
+            supported_count = sum(1 for c in claim_models if c.get('verification_status') == 'SUPPORTED')
+            contradicted_count = sum(1 for c in claim_models if c.get('verification_status') == 'CONTRADICTED')
+            insufficient_count = sum(1 for c in claim_models if c.get('verification_status') == 'INSUFFICIENT_EVIDENCE')
+
+            # --------------------------------------------------
+            # 📊 指标 1：证据覆盖率 (Evidence Coverage)
+            # --------------------------------------------------
+            evidence_coverage = (supported_count / total_claims) if total_claims > 0 else 0.0
+            
+            # --------------------------------------------------
+            # 📊 指标 2：置信度 (Confidence)
+            # --------------------------------------------------
+            confidence = evidence_coverage
+            if contradicted_count > 0:
+                confidence = confidence * 0.5  # 发现矛盾造假，系统极度不信任该简历
                 
-            return round(final_score, 2)
+            # --------------------------------------------------
+            # 📊 指标 3：能力分 (Capability Score) -> Talent_Alpha
+            # --------------------------------------------------
+            capability_score = base_score
+
+
+            # 斩杀 Over-Packaged Claimant (过度包装型主张者) (保留绝对底线)
+            if row.get('Claim-to-Evidence Ratio (主张实证倒挂率)') == 'High':
+                capability_score *= 0.5
+                SYSTEM_LOGGER.warning(f"  🔪 击杀PPT战神: {row.get('email', '')}，杠杆率过高，分数腰斩！")
+                
+            # 实力溢价：有真凭实据的主张给予加分
+            capability_score += (supported_count * 5) 
+            # 信用破产惩罚：造假主张直接重扣
+            capability_score -= (contradicted_count * 20) 
             
-        top_50['Talent_Alpha'] = top_50.apply(apply_llm_裁决, axis=1)
-        
-        # 重新排序，并将这经过大模型洗礼的 Top 50 塞回黄金大盘
-        top_50 = top_50.sort_values(by='Talent_Alpha', ascending=False)
-        self.df_green.update(top_50)
-        
-        # 同步新增的列
-        for col in ['吹牛杠杆率', '诚实自洽护航', 'LLM_高管点评', 'evidence_matrix']:
-            if col not in self.df_green.columns:
-                self.df_green[col] = None
-            self.df_green.loc[top_50.index, col] = top_50[col]
+            # 【不变量建立】：insufficient_count 绝对不参与扣分！疑罪从无！
+            if insufficient_count > 0 and contradicted_count == 0:
+                SYSTEM_LOGGER.info(f"  ⚖️ 疑罪从无: {row.get('email', '')} 存在 {insufficient_count} 处无证据主张，能力分不扣，仅降置信度。")
             
-        self.df_green = self.df_green.sort_values(by='Talent_Alpha', ascending=False)
+            # 确保分数在 0-100 之间
+            capability_score = max(0.0, min(100.0, capability_score))
+
+
+            # --------------------------------------------------
+            # 🔀 2x2 商业风控路由 (Decision Matrix)
+            # --------------------------------------------------
+            CAP_THRESHOLD = 70.0    # 能力及格线 
+            CONF_THRESHOLD = 0.5    # 置信度及格线 (50% 证据覆盖)
+            
+            if capability_score >= CAP_THRESHOLD and confidence >= CONF_THRESHOLD:
+                decision_route = "GREEN"
+                route_reason = "铁证如山：高能力 + 高置信，直通终面"
+            elif capability_score >= CAP_THRESHOLD and confidence < CONF_THRESHOLD:
+                decision_route = "YELLOW"
+                route_reason = "潜力包装客：分数高但缺乏细节证据，需重点追问"
+            elif capability_score < CAP_THRESHOLD and confidence >= CONF_THRESHOLD:
+                decision_route = "RED"
+                route_reason = "确诊水货：铁证表明其能力未达标，安全淘汰"
+            else:
+                # 🚨 核心价值观修复：低分 + 低置信度 -> 转黄池交由人工盲测，绝不误杀！
+                decision_route = "YELLOW"
+                route_reason = "Unsubstantiated Claimants (无实证包装者)：信息极度匮乏导致低分，拒绝淘汰，转人工"
+
+
+            # ==================================================
+            # 🚨 终极补丁：物理隔离安全告警与人才决策 (双通道仲裁)
+            # ==================================================
+            # 通道 A: 提取底层洗消舱传来的安全事件信号
+            security_risk = str(row.get('Prompt Injection Risk (提示词注入预警)', '安全'))
+            is_security_alert = (security_risk != '安全')
+            
+            # 通道 B: 结合仲裁
+            if is_security_alert:
+                # 无论他原本是神仙(GREEN)还是水货(RED)，只要触发了安全探针
+                # 强制挂起至 YELLOW 池！绝不自动淘汰，防止误杀写了“注入攻击研究”的安全工程师
+                decision_route = "YELLOW"
+                route_reason = f"【🛑安全仲裁挂起】人才判决已被挂起。系统侦测到安全风险: [{security_risk}]。需安全员人工核实是真实攻击还是专业履历。"
+
+            elif contradicted_count > 0 and decision_route == "GREEN":
+                # 普通的业务造假降级
+                decision_route = "YELLOW"
+                route_reason = "触发业务造假警报：强行降级至人工池复核"
+
+            return pd.Series([
+                round(capability_score, 1),
+                round(evidence_coverage, 2),
+                round(confidence, 2),
+                decision_route,
+                route_reason
+            ])
+
+        # 接收并应用新的三大指标与路由判定
+        top_50[['Talent_Alpha', 'Evidence_Coverage', 'LLM_Confidence', 'Final_Route', 'Route_Reason']] = top_50.apply(apply_decision_metrics, axis=1)
+
+
+        # ==========================================
+        # 将人员根据新路由分流回各大盘 (修复幽灵标签)
+        # ==========================================
+        green_survivors = top_50[top_50['Final_Route'] == 'GREEN'].copy()
+        demoted_to_yellow = top_50[top_50['Final_Route'] == 'YELLOW'].copy()
+        demoted_to_red = top_50[top_50['Final_Route'] == 'RED'].copy()
+        
+        # 1. 极其关键：从原始绿池中彻底剔除这批已经被大模型评估过的 50 个人
+        self.df_green = self.df_green.drop(top_50.index, errors='ignore')
+        
+        # 🚨 修复：强制覆写 triage_flag，彻底抹除幽灵标签！
+        if not green_survivors.empty:
+            green_survivors['triage_flag'] = 'GREEN'
+            self.df_green = pd.concat([green_survivors, self.df_green], ignore_index=True)
+            self.df_green = self.df_green.sort_values(by='Talent_Alpha', ascending=False)
+            
+        if not demoted_to_yellow.empty:
+            demoted_to_yellow['triage_flag'] = 'YELLOW'  # 👈 同步状态
+            self.df_yellow = pd.concat([self.df_yellow, demoted_to_yellow], ignore_index=True)
+            SYSTEM_LOGGER.warning(f"  ⚠️ 警报: {len(demoted_to_yellow)} 名候选人已落入黄池。")
+            
+        if not demoted_to_red.empty:
+            demoted_to_red['triage_flag'] = 'RED'       # 👈 同步状态
+            self.df_red = pd.concat([self.df_red, demoted_to_red], ignore_index=True)
+            SYSTEM_LOGGER.warning(f"  ☠️ 警报: {len(demoted_to_red)} 名候选人直接打入红池淘汰。")
+
 
     def export_deliverables(self):
-        SYSTEM_LOGGER.info("\n[STAGE 5] --- 后端物理落锁 ---")
+        SYSTEM_LOGGER.info("\n[STAGE 5] --- Backend Data Commit (后端数据提交) ---")
         os.makedirs(os.path.dirname(self.output_green), exist_ok=True)
         
+        # ==========================================
+        # 🚨 [V7.1 终极装甲] 物理清洗：碾平大模型生成的换行符，防止击穿 CSV
+        # ==========================================
+        for df in [self.df_green, self.df_yellow, self.df_red]:
+            # 替换为真实的列名！
+            actual_col_name = '【HR/CTO 面试追问清单】' 
+            if not df.empty and actual_col_name in df.columns:
+                df[actual_col_name] = df[actual_col_name].astype(str).str.replace('\n', ' ', regex=False)
+        # ==========================================
+
         if not self.df_green.empty:
             self.df_green.to_csv(self.output_green, index=False, encoding='utf-8-sig')
-            SYSTEM_LOGGER.info(f"✅ 黄金大盘已落锁: {self.output_green}")
+            SYSTEM_LOGGER.info(f"✅ High-Priority Talent Pool (绿池)已落锁: {self.output_green}")
             # 自动展示 Top 3 战神！
             SYSTEM_LOGGER.info("\n👑 [大盘简报] 斩获黄金池 Top 3 超级战神：")
 
             # 确保 DataFrame 不为空且包含 Talent_Alpha 列
             if not self.df_green.empty and 'Talent_Alpha' in self.df_green.columns:
-                # 按最终身价从高到低排序，取前 3 名
+                # 按Final Talent Valuation (最终人才估值)从高到低排序，取前 3 名
                 top3 = self.df_green.sort_values(by='Talent_Alpha', ascending=False).head(3)
 
                 for index, row in top3.iterrows():
                     email = row.get('email', 'Unknown_Geek')
                     score = row.get('Talent_Alpha', 0.0)
-                    # 兼容 V6.0 的新字段
-                    claim = row.get('吹牛杠杆率', 'Unknown')
+                    # 兼容 V7.1 的新字段
+                    claim = row.get('Claim-to-Evidence Ratio (主张实证倒挂率)', 'Unknown')
                 
                     print(f"  => 🏅 {email} | 综合分: {score:.1f} | 杠杆率: {claim}")
             else:
@@ -273,9 +404,9 @@ class MasterDataPipeline:
 
         if not self.df_yellow.empty:
             self.df_yellow.to_csv(self.output_yellow, index=False, encoding='utf-8-sig')
-            SYSTEM_LOGGER.info(f"✅ 捡漏池已落锁: {self.output_yellow}")
+            SYSTEM_LOGGER.info(f"✅ Secondary Verification Pool (黄池)已落锁: {self.output_yellow}")
             
         if not self.df_red.empty:
             cols_to_keep = [c for c in self.df_red.columns if c not in ['Tech_Score', 'Project_Score', 'Potential_Score', 'Talent_Alpha']]
             self.df_red[cols_to_keep].to_csv(self.output_red, index=False, encoding='utf-8-sig')
-            SYSTEM_LOGGER.info(f"☠️ 阵亡名册及死因已封存: {self.output_red}")
+            SYSTEM_LOGGER.info(f"☠️ Intercepted & Archived Roster (拦截封存库): {self.output_red}")
