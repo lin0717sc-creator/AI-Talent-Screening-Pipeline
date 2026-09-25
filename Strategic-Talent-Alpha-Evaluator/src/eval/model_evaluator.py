@@ -5,7 +5,7 @@ from sklearn.metrics import roc_auc_score, precision_score, recall_score, f1_sco
 
 # 1. 配置路径 (请确保与你的实际路径对齐)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-PREDICTED_SCORE_FILE = os.path.join(BASE_DIR, "data", "03_processed", "cleaned_v1_master.csv")
+PREDICTED_SCORE_FILE = os.path.join(BASE_DIR, "data", "03_processed", "cleaned_v1_master_human_audit.csv")
 GROUND_TRUTH_FILE = os.path.join(BASE_DIR, "data", "historical_labels.csv")
 
 def run_evaluation():
@@ -30,6 +30,8 @@ def run_evaluation():
     # 如果系统把他们枪毙了（不在 master 表里），就把他们的分数强行记为 0！
     df_merged = pd.merge(df_truth, df_pred[['email', SCORE_COLUMN]], on='email', how='left')
     df_merged[SCORE_COLUMN] = df_merged[SCORE_COLUMN].fillna(0)
+    print("\n[Debug] 查看合并后的前 5 条数据：")
+    print(df_merged[['email', SCORE_COLUMN, 'Offer_Status']].head())
     
     if len(df_merged) < 2:
         print("❌ 样本量过少，无法计算统计学指标，请确保有足够的对齐数据。")
